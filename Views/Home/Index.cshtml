@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "Tổng quan";
+}
+
+<section class="dashboard-heading">
+    <p class="eyebrow">QUẢN LÝ THƯ VIỆN</p>
+    <h1>Không gian thư viện</h1>
+    <p class="text-secondary mb-0">
+        @if (User.IsInRole(LibraryRoles.ThuThu) || User.IsInRole(LibraryRoles.QuanTriVien))
+        {
+            <span>Tổng quan hoạt động và truy cập nhanh các khu vực quản lý.</span>
+        }
+        else if (User.Identity?.IsAuthenticated == true)
+        {
+            <span>Chào @User.Identity.Name. Chúc bạn có một hành trình đọc sách thú vị.</span>
+        }
+        else
+        {
+            <span>Đăng nhập hoặc tạo tài khoản để bắt đầu sử dụng thư viện.</span>
+        }
+    </p>
+</section>
+
+@if (User.IsInRole(LibraryRoles.ThuThu) || User.IsInRole(LibraryRoles.QuanTriVien))
+{
+    <section class="dashboard-metrics" aria-label="Tổng quan dữ liệu">
+        <div class="metric-item">
+            <span class="metric-value">@Model.BookTitles</span>
+            <span class="metric-label">Đầu sách</span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-value">@Model.AvailableCopies</span>
+            <span class="metric-label">Tổng bản sách</span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-value">@Model.Readers</span>
+            <span class="metric-label">Độc giả</span>
+        </div>
+        <div class="metric-item metric-alert">
+            <span class="metric-value">@Model.OverdueLoans</span>
+            <span class="metric-label">Phiếu quá hạn</span>
+        </div>
+    </section>
+
+    <section class="dashboard-links" aria-label="Khu vực quản lý">
+        <a class="dashboard-link" asp-controller="Sach" asp-action="Index">
+            <span class="dashboard-link-title">Sách</span>
+            <span class="dashboard-link-description">@Model.BookTitles đầu sách · @Model.AvailableCopies bản</span>
+            <span class="dashboard-link-arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="dashboard-link" asp-controller="TheLoai" asp-action="Index">
+            <span class="dashboard-link-title">Thể loại</span>
+            <span class="dashboard-link-description">@Model.Categories nhóm chủ đề</span>
+            <span class="dashboard-link-arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="dashboard-link" asp-controller="DocGia" asp-action="Index">
+            <span class="dashboard-link-title">Độc giả</span>
+            <span class="dashboard-link-description">@Model.Readers hồ sơ bạn đọc</span>
+            <span class="dashboard-link-arrow" aria-hidden="true">→</span>
+        </a>
+    </section>
+
+    <p class="dashboard-note">
+        @Model.ActiveLoans phiếu đang mượn
+        <span aria-hidden="true">·</span>
+        @Model.OverdueLoans phiếu quá hạn
+    </p>
+}
+else
+{
+    <div class="reader-welcome">
+        <span class="reader-welcome-mark" aria-hidden="true">Đ</span>
+        <div>
+            <h2>@(User.Identity?.IsAuthenticated == true ? "Tài khoản độc giả" : "Bắt đầu hành trình đọc")</h2>
+            <p class="text-secondary mb-0">@(User.Identity?.IsAuthenticated == true
+                ? "Tài khoản của bạn đã sẵn sàng. Hãy ghé thư viện để khám phá những cuốn sách phù hợp."
+                : "Tạo tài khoản miễn phí để trở thành độc giả của thư viện.")</p>
+        </div>
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <div class="account-actions">
+                <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Đăng ký độc giả</a>
+                <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+            </div>
+        }
+    </div>
+}

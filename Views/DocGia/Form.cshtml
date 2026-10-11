@@ -1,0 +1,46 @@
+@model DocGia
+@{
+    var isEdit = Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Sửa độc giả" : "Thêm độc giả";
+}
+
+<section class="form-panel">
+    <p class="eyebrow">ĐỘC GIẢ</p>
+    <h1>@ViewData["Title"]</h1>
+    @if (!isEdit)
+    {
+        <p class="text-secondary">Hồ sơ tạo tại đây chưa có tài khoản đăng nhập.</p>
+    }
+    <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post" class="form-grid">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div>
+            <label asp-for="HoTen" class="form-label"></label>
+            <input asp-for="HoTen" class="form-control" autocomplete="name" autofocus />
+            <span asp-validation-for="HoTen" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" autocomplete="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="SoDienThoai" class="form-label"></label>
+            <input asp-for="SoDienThoai" class="form-control" autocomplete="tel" />
+            <span asp-validation-for="SoDienThoai" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="DiaChi" class="form-label"></label>
+            <textarea asp-for="DiaChi" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="DiaChi" class="text-danger"></span>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Lưu hồ sơ</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,20 @@
+@model DocGia
+@{
+    ViewData["Title"] = "Chi tiết độc giả";
+}
+
+<section class="form-panel">
+    <p class="eyebrow">ĐỘC GIẢ</p>
+    <div class="page-heading compact-heading">
+        <h1>@Model.HoTen</h1>
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa hồ sơ</a>
+    </div>
+    <dl class="detail-list">
+        <dt>Email</dt><dd>@Model.Email</dd>
+        <dt>Số điện thoại</dt><dd>@(Model.SoDienThoai ?? "—")</dd>
+        <dt>Địa chỉ</dt><dd>@(Model.DiaChi ?? "—")</dd>
+        <dt>Ngày đăng ký</dt><dd>@Model.NgayDangKy.ToLocalTime().ToString("dd/MM/yyyy")</dd>
+        <dt>Tài khoản đăng nhập</dt><dd>@(Model.IdentityUserId is null ? "Chưa liên kết" : "Đã kích hoạt")</dd>
+    </dl>
+    <a class="btn btn-link px-0" asp-action="Index">Quay lại danh sách</a>
+</section>

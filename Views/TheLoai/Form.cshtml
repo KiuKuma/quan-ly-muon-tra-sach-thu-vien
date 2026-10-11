@@ -1,0 +1,32 @@
+@model TheLoai
+@{
+    var isEdit = Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Sửa thể loại" : "Thêm thể loại";
+}
+
+<section class="form-panel">
+    <p class="eyebrow">THỂ LOẠI</p>
+    <h1>@ViewData["Title"]</h1>
+    <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post" class="form-grid">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div>
+            <label asp-for="TenTheLoai" class="form-label"></label>
+            <input asp-for="TenTheLoai" class="form-control" autofocus />
+            <span asp-validation-for="TenTheLoai" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="MoTa" class="form-label"></label>
+            <textarea asp-for="MoTa" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="MoTa" class="text-danger"></span>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

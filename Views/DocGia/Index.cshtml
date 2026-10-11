@@ -1,0 +1,52 @@
+@model IEnumerable<DocGia>
+@{
+    ViewData["Title"] = "Độc giả";
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">ĐỘC GIẢ</p>
+        <h1>Độc giả</h1>
+        <p class="text-secondary">@Model.Count() hồ sơ</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">Thêm độc giả</a>
+</div>
+
+<form asp-action="Index" method="get" class="search-row">
+    <label for="search" class="visually-hidden">Tìm theo tên hoặc email</label>
+    <input id="search" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm tên hoặc email" />
+    <button type="submit" class="btn btn-outline-secondary">Tìm</button>
+    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Search))
+    {
+        <a class="btn btn-link" asp-action="Index">Xóa lọc</a>
+    }
+</form>
+
+@if (!Model.Any())
+{
+    <div class="empty-state"><p>Không tìm thấy hồ sơ độc giả.</p></div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Tài khoản</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody>
+            @foreach (var reader in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@reader.HoTen</td>
+                    <td>@reader.Email</td>
+                    <td>@(reader.SoDienThoai ?? "—")</td>
+                    <td>@(reader.IdentityUserId is null ? "Chưa liên kết" : "Đã kích hoạt")</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@reader.Id">Xem</a>
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@reader.Id">Sửa</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@reader.Id">Xóa</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,151 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using quan_ly_muon_tra_sach_thu_vien.Data;
+using quan_ly_muon_tra_sach_thu_vien.Models;
+
+namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
+
+[Authorize(Roles = LibraryRoles.ThuThu + "," + LibraryRoles.QuanTriVien)]
+public sealed class TheLoaiController(LibraryFileStore store) : Controller
+{
+    public async Task<IActionResult> Index(string? search)
+    {
+        ViewBag.Search = search;
+        return View(await store.ReadAsync(data =>
+        {
+            var categories = data.TheLoai.AsEnumerable();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                categories = categories.Where(category =>
+                    category.TenTheLoai.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    (category.MoTa?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
+            return categories.OrderBy(category => category.TenTheLoai).ToList();
+        }));
+    }
+
+    public async Task<IActionResult> Details(int id)
+    {
+        var category = await store.ReadAsync(data =>
+        {
+            var item = data.TheLoai.FirstOrDefault(category => category.Id == id);
+            if (item is not null)
+            {
+                item.Sach = data.Sach.Where(book => book.TheLoaiId == id).ToList();
+            }
+
+            return item;
+        });
+        return category is null ? NotFound() : View(category);
+    }
+
+    public IActionResult Create() => View("Form", new TheLoai());
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create([Bind("TenTheLoai,MoTa")] TheLoai category)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("Form", category);
+        }
+
+        var added = await store.UpdateAsync(data =>
+        {
+            if (data.TheLoai.Any(item => item.TenTheLoai.Equals(category.TenTheLoai.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            category.Id = data.TheLoai.Select(item => item.Id).DefaultIfEmpty(0).Max() + 1;
+            category.TenTheLoai = category.TenTheLoai.Trim();
+            data.TheLoai.Add(category);
+            return true;
+        });
+        if (!added)
+        {
+            ModelState.AddModelError(nameof(category.TenTheLoai), "Tên thể loại đã tồn tại.");
+            return View("Form", category);
+        }
+        TempData["Success"] = "Đã thêm thể loại.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> Edit(int id)
+    {
+        var category = await store.ReadAsync(data => data.TheLoai.FirstOrDefault(item => item.Id == id));
+        return category is null ? NotFound() : View("Form", category);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, [Bind("Id,TenTheLoai,MoTa")] TheLoai category)
+    {
+        if (id != category.Id)
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View("Form", category);
+        }
+
+        var updated = await store.UpdateAsync(data =>
+        {
+            var existing = data.TheLoai.FirstOrDefault(item => item.Id == id);
+            if (existing is null || data.TheLoai.Any(item => item.Id != id &&
+                    item.TenTheLoai.Equals(category.TenTheLoai.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            existing.TenTheLoai = category.TenTheLoai.Trim();
+            existing.MoTa = category.MoTa?.Trim();
+            return true;
+        });
+        if (!updated)
+        {
+            ModelState.AddModelError(nameof(category.TenTheLoai), "Không thể cập nhật. Tên có thể đã tồn tại.");
+            return View("Form", category);
+        }
+        TempData["Success"] = "Đã cập nhật thể loại.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> Delete(int id)
+    {
+        var category = await store.ReadAsync(data => data.TheLoai.FirstOrDefault(item => item.Id == id));
+        return category is null ? NotFound() : View(category);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        var category = await store.ReadAsync(data => data.TheLoai.FirstOrDefault(item => item.Id == id));
+        if (category is null)
+        {
+            return NotFound();
+        }
+
+        var deleted = await store.UpdateAsync(data =>
+        {
+            if (data.Sach.Any(book => book.TheLoaiId == id))
+            {
+                return false;
+            }
+
+            return data.TheLoai.RemoveAll(item => item.Id == id) > 0;
+        });
+        if (!deleted)
+        {
+            TempData["Error"] = "Không thể xóa thể loại đang được sách sử dụng.";
+            return RedirectToAction(nameof(Index));
+        }
+        TempData["Success"] = "Đã xóa thể loại.";
+        return RedirectToAction(nameof(Index));
+    }
+}

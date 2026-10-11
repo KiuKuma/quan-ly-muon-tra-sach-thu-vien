@@ -1,0 +1,52 @@
+@model IEnumerable<Sach>
+@{
+    ViewData["Title"] = "Sách";
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">KHO SÁCH</p>
+        <h1>Sách</h1>
+        <p class="text-secondary">@Model.Count() đầu sách</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">Thêm sách</a>
+</div>
+
+<form asp-action="Index" method="get" class="search-row">
+    <label for="search" class="visually-hidden">Tìm theo tên sách hoặc tác giả</label>
+    <input id="search" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm tên sách hoặc tác giả" />
+    <button type="submit" class="btn btn-outline-secondary">Tìm</button>
+    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Search))
+    {
+        <a class="btn btn-link" asp-action="Index">Xóa lọc</a>
+    }
+</form>
+
+@if (!Model.Any())
+{
+    <div class="empty-state"><p>Không tìm thấy sách phù hợp.</p></div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Tên sách</th><th>Tác giả</th><th>Thể loại</th><th class="text-end">SL</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody>
+            @foreach (var book in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@book.TenSach</td>
+                    <td>@book.TacGia</td>
+                    <td>@book.TheLoai?.TenTheLoai</td>
+                    <td class="text-end">@book.SoLuong</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@book.Id">Xem</a>
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@book.Id">Sửa</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@book.Id">Xóa</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

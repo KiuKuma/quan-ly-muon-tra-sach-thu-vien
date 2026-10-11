@@ -1,0 +1,14 @@
+@model DocGia
+@{
+    ViewData["Title"] = "Xóa độc giả";
+}
+
+<section class="form-panel">
+    <p class="eyebrow">XÁC NHẬN THAO TÁC</p>
+    <h1>Xóa hồ sơ độc giả?</h1>
+    <p>Bạn đang xóa hồ sơ <strong>@Model.HoTen</strong>. Nếu hồ sơ có tài khoản đăng nhập, tài khoản đó cũng sẽ bị xóa. Độc giả có phiếu mượn chưa thể xóa.</p>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="form-actions">
+        <button type="submit" class="btn btn-danger">Xóa độc giả</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+    </form>
+</section>

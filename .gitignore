@@ -62,3 +62,8 @@ bin/
 obj/
 [Dd]ebug/
 [Rr]elease/
+
+# Dữ liệu thư viện cục bộ, gồm password hash của tài khoản
+App_Data/*.txt
+App_Data/*.tmp
+App_Data/*.bak
