@@ -5,6 +5,8 @@
       "label": "build",
       "command": "dotnet",
       "type": "process",
+      "dependsOn": "stop-running-library",
+      "dependsOrder": "sequence",
       "args": [
         "build",
         "${workspaceFolder}\\quan-ly-muon-tra-sach-thu-vien.csproj"
@@ -14,6 +16,19 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "stop-running-library",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.vscode\\stop-running-library.ps1"
+      ],
+      "problemMatcher": []
     }
   ]
 }

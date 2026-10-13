@@ -33,7 +33,7 @@ else
 {
     <div class="table-responsive">
         <table class="table align-middle">
-            <thead><tr><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Tài khoản</th><th class="text-end">Thao tác</th></tr></thead>
+            <thead><tr><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th class="text-end">Thao tác</th></tr></thead>
             <tbody>
             @foreach (var reader in Model)
             {
@@ -41,7 +41,6 @@ else
                     <td class="fw-semibold">@reader.HoTen</td>
                     <td>@reader.Email</td>
                     <td>@(reader.SoDienThoai ?? "—")</td>
-                    <td>@(reader.IdentityUserId is null ? "Chưa liên kết" : "Đã kích hoạt")</td>
                     <td class="text-end text-nowrap">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@reader.Id">Xem</a>
                         @if (User.IsInRole(LibraryRoles.QuanLy))

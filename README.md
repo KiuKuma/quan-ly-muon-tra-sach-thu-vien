@@ -1,6 +1,6 @@
 # Quản lý thư viện
 
-Ứng dụng ASP.NET Core MVC trên .NET 10. Dữ liệu được lưu dưới dạng JSON Lines trong các tệp `.txt` ở `App_Data`; không cần SQL Server.
+Ứng dụng ASP.NET Core MVC trên .NET 10. Dữ liệu được lưu dưới dạng JSON Lines trong các tệp `.txt` ở thư mục `database`; không cần SQL Server.
 
 ## Chạy ứng dụng
 
@@ -12,7 +12,9 @@ dotnet run
 
 Trong VS Code, mở thư mục dự án, chọn **Run and Debug** rồi nhấn nút chạy (hoặc nhấn `F5`). VS Code sẽ tự build ứng dụng và mở trang tại `http://localhost:5262`. Cần cài extension **C# Dev Kit** nếu VS Code chưa hỗ trợ chạy và debug C#.
 
-Thư mục dữ liệu có thể đổi bằng `LibraryData__DirectoryPath`; mặc định là `App_Data` tương đối với thư mục ứng dụng. Sao lưu cả thư mục này định kỳ. Chỉ chạy một tiến trình ứng dụng tại một thời điểm.
+Tác vụ build của VS Code tự dừng các tiến trình cũ của ứng dụng này trước khi ghi DLL mới, tránh lỗi build do phiên chạy trước vẫn khóa tệp. Dùng **Run Library** hoặc `F5` để chạy lại; không cần mở hay sửa các tệp trong thư mục .NET SDK.
+
+Thư mục dữ liệu có thể đổi bằng `LibraryData__DirectoryPath`; mặc định là `database` tương đối với thư mục ứng dụng. Sao lưu cả thư mục này định kỳ. Chỉ chạy một tiến trình ứng dụng tại một thời điểm.
 
 `users.txt` chỉ lưu tên tài khoản, hash mật khẩu và vai trò. Hồ sơ cá nhân (họ tên, email, số điện thoại, địa chỉ) được lưu riêng trong `profiles.txt`; email chỉ là thông tin hồ sơ, không dùng để đăng nhập. Các tệp còn lại lưu độc giả, thể loại, sách, nhân viên, phiếu mượn và chi tiết phiếu. Nếu tìm thấy `library.json` cũ, ứng dụng tự chia dữ liệu vào các tệp mới và giữ bản gốc thành `library.json.migrated.bak`.
 
