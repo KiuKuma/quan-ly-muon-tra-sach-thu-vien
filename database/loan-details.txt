@@ -1,0 +1,6 @@
+{"Id":1,"PhieuMuonId":1,"SachId":1,"SoLuong":1}
+{"Id":2,"PhieuMuonId":2,"SachId":2,"SoLuong":1}
+{"Id":3,"PhieuMuonId":3,"SachId":3,"SoLuong":1}
+{"Id":4,"PhieuMuonId":4,"SachId":1,"SoLuong":1}
+{"Id":5,"PhieuMuonId":5,"SachId":2,"SoLuong":1}
+{"Id":6,"PhieuMuonId":6,"SachId":3,"SoLuong":1}

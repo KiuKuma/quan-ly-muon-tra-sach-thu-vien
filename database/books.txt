@@ -1,0 +1,8 @@
+{"Id":1,"TenSach":"Clean Code: A Handbook of Agile Software Craftsmanship","TacGia":"Robert C. Martin","ISBN":"9780132350884","NhaXuatBan":"Prentice Hall","NamXuatBan":2008,"SoLuong":4,"TheLoaiId":2}
+{"Id":2,"TenSach":"The Pragmatic Programmer: 20th Anniversary Edition","TacGia":"David Thomas, Andrew Hunt","ISBN":"9780135957059","NhaXuatBan":"Addison-Wesley Professional","NamXuatBan":2019,"SoLuong":3,"TheLoaiId":2}
+{"Id":3,"TenSach":"Head First Java: A Brain-Friendly Guide","TacGia":"Kathy Sierra, Bert Bates, Trisha Gee","ISBN":"9781491910771","NhaXuatBan":"O'Reilly Media","NamXuatBan":2022,"SoLuong":3,"TheLoaiId":2}
+{"Id":4,"TenSach":"Don't Make Me Think, Revisited","TacGia":"Steve Krug","ISBN":"9780321965516","NhaXuatBan":"New Riders","NamXuatBan":2014,"SoLuong":4,"TheLoaiId":3}
+{"Id":5,"TenSach":"Domain-Driven Design: Tackling Complexity in the Heart of Software","TacGia":"Eric Evans","ISBN":"9780321125217","NhaXuatBan":"Addison-Wesley Professional","NamXuatBan":2003,"SoLuong":2,"TheLoaiId":3}
+{"Id":6,"TenSach":"Atomic Habits","TacGia":"James Clear","ISBN":"9780735211292","NhaXuatBan":"Avery","NamXuatBan":2018,"SoLuong":6,"TheLoaiId":4}
+{"Id":7,"TenSach":"To Kill a Mockingbird","TacGia":"Harper Lee","ISBN":"9780061120084","NhaXuatBan":"Harper Perennial Modern Classics","NamXuatBan":2006,"SoLuong":3,"TheLoaiId":5}
+{"Id":8,"TenSach":"Harry Potter and the Philosopher's Stone","TacGia":"J. K. Rowling","ISBN":"9780747532699","NhaXuatBan":"Bloomsbury","NamXuatBan":1997,"SoLuong":4,"TheLoaiId":6}

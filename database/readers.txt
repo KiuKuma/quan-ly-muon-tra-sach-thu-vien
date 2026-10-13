@@ -1,0 +1,8 @@
+{"Id":1,"HoTen":"nguyễn huy thành","Email":"huythanh@gmail.com","SoDienThoai":"0900000000","DiaChi":"Hà Nội","NgayDangKy":"2026-10-10T16:27:41.9390578Z","IdentityUserId":"23b5182952b34c10bad35c9878bc9daf"}
+{"Id":2,"HoTen":"đỗ phương anh","Email":"anhkill8a1@gmail.com","SoDienThoai":"0357369489","DiaChi":"hà nụi","NgayDangKy":"2026-10-10T16:38:50.714802Z","IdentityUserId":"71a106ba9e934ad79282103a456d0a61"}
+{"Id":3,"HoTen":"quỳnh anh","Email":"quynhanh@gmail.com","SoDienThoai":"0900000101","DiaChi":"Dữ liệu minh họa","NgayDangKy":"2026-09-10T20:10:28.759452Z","IdentityUserId":null}
+{"Id":4,"HoTen":"đặng dũng","Email":"dangdung@gmail.com","SoDienThoai":"0900000102","DiaChi":"Dữ liệu minh họa","NgayDangKy":"2026-09-10T20:10:28.759465Z","IdentityUserId":null}
+{"Id":5,"HoTen":"Thu Hà","Email":"thuha@gmail.com","SoDienThoai":"0900000103","DiaChi":"Dữ liệu minh họa","NgayDangKy":"2026-09-10T20:10:28.759466Z","IdentityUserId":null}
+{"Id":6,"HoTen":"Minh An","Email":"minh.an@example.test","SoDienThoai":"0900000101","DiaChi":"Dữ liệu minh họa","NgayDangKy":"2026-09-13T10:15:59.4585767Z","IdentityUserId":null}
+{"Id":7,"HoTen":"Gia Huy","Email":"gia.huy@example.test","SoDienThoai":"0900000102","DiaChi":"Dữ liệu minh họa","NgayDangKy":"2026-09-13T10:15:59.45862Z","IdentityUserId":null}
+{"Id":8,"HoTen":"Độc giả mẫu - Thu Hà","Email":"thu.ha@example.test","SoDienThoai":"0900000103","DiaChi":"Dữ liệu minh họa","NgayDangKy":"2026-09-13T17:33:29.2532979Z","IdentityUserId":null}

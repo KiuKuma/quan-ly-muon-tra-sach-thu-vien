@@ -68,6 +68,5 @@ obj/
 App_Data/*.txt
 App_Data/*.tmp
 App_Data/*.bak
-database/*.txt
 database/*.tmp
 database/*.bak

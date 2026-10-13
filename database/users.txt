@@ -1,0 +1,4 @@
+{"Id":"1b9fff615ba345d79627a0803b2d9fcd","Username":"admin","PasswordHash":"AQAAAAIAAYagAAAAEPKlpGZ+bqDia1ra+EWdpHxMYIwP7FrFkyUzKz6ggoU0dbVIa2d9y1r7d0Bm4dq+ag==","Roles":["Quản lý"],"FailedLoginAttempts":0,"LockoutEndUtc":null}
+{"Id":"85bbb3bd62c349b5aa193ca094ae3e95","Username":"nhanvien1","PasswordHash":"AQAAAAIAAYagAAAAEHny1VxBaHZO34xxy1RppzmMKX3YF8uW86XyGoEx7tRuFSW0joEnQw8gH/uMiu12cg==","Roles":["Nhân viên"],"FailedLoginAttempts":0,"LockoutEndUtc":null}
+{"Id":"e984be459f3c42b9b3bccbd972a06b95","Username":"nhanvien2","PasswordHash":"AQAAAAIAAYagAAAAEIt5wtdiI8295/SF+hysP4fvrVIh2OrRz/BRkRUACFIaaDxIvKja6m9o0wO+CkfG8g==","Roles":["Nhân viên"],"FailedLoginAttempts":0,"LockoutEndUtc":null}
+{"Id":"0c0f9fed8955435b8156aa29430cb7c7","Username":"nhanvien3","PasswordHash":"AQAAAAIAAYagAAAAEL9/UdfRzFWo2SLTiRYIVI8EePkOleZoZbITShbYqK9mwnYU7x5VpB1Mz1XhfE6hrw==","Roles":["Nhân viên"],"FailedLoginAttempts":0,"LockoutEndUtc":null}

@@ -1,0 +1,4 @@
+{"AccountId":"1b9fff615ba345d79627a0803b2d9fcd","HoTen":"Nguyễn Minh Anh","Email":"minh.anh@example.test","SoDienThoai":"0901234501","DiaChi":"12 Đường Hoa Phượng, Quận 1"}
+{"AccountId":"85bbb3bd62c349b5aa193ca094ae3e95","HoTen":"Trần Gia Hân","Email":"giahan@gmail.com","SoDienThoai":"0901234502","DiaChi":"28 Đường Ánh Dương, Quận 3"}
+{"AccountId":"e984be459f3c42b9b3bccbd972a06b95","HoTen":"Lê Quốc Bảo","Email":"quoc.bao@example.test","SoDienThoai":"0901234503","DiaChi":"45 Đường Bình Minh, Quận 5"}
+{"AccountId":"0c0f9fed8955435b8156aa29430cb7c7","HoTen":"Phạm Thu Hà","Email":"thu.ha@example.test","SoDienThoai":"0901234504","DiaChi":"73 Đường Mùa Xuân, Quận 7"}
