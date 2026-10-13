@@ -5,7 +5,7 @@ using quan_ly_muon_tra_sach_thu_vien.Models.ViewModels;
 
 namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
-[Authorize(Roles = LibraryRoles.QuanTriVien)]
+[Authorize(Roles = LibraryRoles.QuanLy)]
 public sealed class TaiKhoanController(
     LibraryFileStore store,
     LibraryAccountService accounts) : Controller
@@ -13,43 +13,78 @@ public sealed class TaiKhoanController(
     public async Task<IActionResult> Index()
     {
         var viewModels = await store.ReadAsync(data => data.Accounts
-            .OrderBy(account => account.HoTen)
-            .Select(account => new AccountSummaryViewModel
+            .OrderBy(account => account.Username)
+            .Select(account =>
             {
-                Id = account.Id,
-                HoTen = account.HoTen,
-                Email = account.Email,
-                Role = account.Roles.FirstOrDefault() ?? LibraryRoles.DocGia
+                var profile = data.Profiles.FirstOrDefault(item => item.AccountId == account.Id);
+                return new AccountSummaryViewModel
+                {
+                    Id = account.Id,
+                    Username = account.Username,
+                    HoTen = profile?.HoTen ?? string.Empty,
+                    Email = profile?.Email ?? string.Empty,
+                    SoDienThoai = profile?.SoDienThoai,
+                    Role = account.Roles.FirstOrDefault() ?? string.Empty
+                };
             })
             .ToList());
         return View(viewModels);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Edit(string id)
+    {
+        var model = await store.ReadAsync(data =>
+        {
+            var account = data.Accounts.FirstOrDefault(item => item.Id == id);
+            var profile = data.Profiles.FirstOrDefault(item => item.AccountId == id);
+            return account is null || profile is null
+                ? null
+                : new LibraryProfileViewModel
+                {
+                    Username = account.Username,
+                    Role = account.Roles.FirstOrDefault() ?? string.Empty,
+                    HoTen = profile.HoTen,
+                    Email = profile.Email,
+                    SoDienThoai = profile.SoDienThoai,
+                    DiaChi = profile.DiaChi
+                };
+        });
+        return model is null ? NotFound() : View(model);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetRole(string id, string role)
+    public async Task<IActionResult> Edit(string id, LibraryProfileViewModel model)
     {
-        var currentAccountId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (currentAccountId == id && role != LibraryRoles.QuanTriVien)
+        if (!ModelState.IsValid)
         {
-            TempData["Error"] = "Bạn không thể tự gỡ quyền Quản trị viên đang sử dụng.";
-            return RedirectToAction(nameof(Index));
+            await PopulateIdentityAsync(model, id);
+            return View(model);
         }
 
-        var result = await accounts.SetRoleAsync(id, role);
-        TempData[result switch
+        var result = await accounts.UpdateProfileAsync(id, model);
+        if (result == ProfileUpdateResult.NotFound)
         {
-            RoleChangeResult.Success => "Success",
-            _ => "Error"
-        }] = result switch
+            return NotFound();
+        }
+
+        if (result == ProfileUpdateResult.DuplicateEmail)
         {
-            RoleChangeResult.Success => $"Đã cập nhật vai trò thành {role}.",
-            RoleChangeResult.NotFound => "Không tìm thấy tài khoản.",
-            RoleChangeResult.LastAdministrator => "Không thể gỡ quyền Quản trị viên cuối cùng.",
-            RoleChangeResult.InvalidRole => "Vai trò được chọn không hợp lệ.",
-            RoleChangeResult.HasLoans => "Không thể gỡ quyền vì nhân viên này đang có phiếu mượn.",
-            _ => "Không thể thay đổi quyền tài khoản."
-        };
+            ModelState.AddModelError(nameof(model.Email), "Email này đã được sử dụng.");
+            await PopulateIdentityAsync(model, id);
+            return View(model);
+        }
+
+        TempData["Success"] = "Đã cập nhật hồ sơ nhân viên.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task PopulateIdentityAsync(LibraryProfileViewModel model, string id)
+    {
+        var account = await store.ReadAsync(data =>
+            data.Accounts.FirstOrDefault(item => item.Id == id));
+        model.Username = account?.Username ?? string.Empty;
+        model.Role = account?.Roles.FirstOrDefault() ?? string.Empty;
     }
 }

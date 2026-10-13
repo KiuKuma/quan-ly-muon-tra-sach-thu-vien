@@ -5,7 +5,7 @@ using quan_ly_muon_tra_sach_thu_vien.Models;
 
 namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
-[Authorize(Roles = LibraryRoles.ThuThu + "," + LibraryRoles.QuanTriVien)]
+[Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
 public sealed class DocGiaController(
     LibraryFileStore store) : Controller
 {
@@ -32,9 +32,11 @@ public sealed class DocGiaController(
         return reader is null ? NotFound() : View(reader);
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public IActionResult Create() => View("Form", new DocGia());
 
     [HttpPost]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("HoTen,Email,SoDienThoai,DiaChi")] DocGia reader)
     {
@@ -47,7 +49,7 @@ public sealed class DocGiaController(
         var added = await store.UpdateAsync(data =>
         {
             if (data.DocGia.Any(item => item.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase)) ||
-                data.Accounts.Any(account => account.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase)))
+                data.Profiles.Any(profile => profile.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase)))
             {
                 return false;
             }
@@ -70,6 +72,7 @@ public sealed class DocGiaController(
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public async Task<IActionResult> Edit(int id)
     {
         var reader = await store.ReadAsync(data => data.DocGia.FirstOrDefault(item => item.Id == id));
@@ -77,6 +80,7 @@ public sealed class DocGiaController(
     }
 
     [HttpPost]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("Id,HoTen,Email,SoDienThoai,DiaChi")] DocGia reader)
     {
@@ -103,8 +107,8 @@ public sealed class DocGiaController(
             var current = data.DocGia.FirstOrDefault(item => item.Id == id);
             if (current is null || data.DocGia.Any(item => item.Id != id &&
                     item.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase)) ||
-                data.Accounts.Any(account => account.Id != current.IdentityUserId &&
-                    account.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase)))
+                data.Profiles.Any(profile => profile.AccountId != current.IdentityUserId &&
+                    profile.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase)))
             {
                 return false;
             }
@@ -113,12 +117,13 @@ public sealed class DocGiaController(
             current.Email = reader.Email.Trim();
             current.SoDienThoai = reader.SoDienThoai?.Trim();
             current.DiaChi = reader.DiaChi?.Trim();
-            var account = data.Accounts.FirstOrDefault(item => item.Id == current.IdentityUserId);
-            if (account is not null)
+            var profile = data.Profiles.FirstOrDefault(item => item.AccountId == current.IdentityUserId);
+            if (profile is not null)
             {
-                account.HoTen = current.HoTen;
-                account.Email = current.Email;
-                account.SoDienThoai = current.SoDienThoai;
+                profile.HoTen = current.HoTen;
+                profile.Email = current.Email;
+                profile.SoDienThoai = current.SoDienThoai;
+                profile.DiaChi = current.DiaChi ?? string.Empty;
             }
 
             return true;
@@ -135,6 +140,7 @@ public sealed class DocGiaController(
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public async Task<IActionResult> Delete(int id)
     {
         var reader = await store.ReadAsync(data => data.DocGia.FirstOrDefault(item => item.Id == id));
@@ -142,6 +148,7 @@ public sealed class DocGiaController(
     }
 
     [HttpPost, ActionName("Delete")]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
@@ -158,7 +165,6 @@ public sealed class DocGiaController(
                 return false;
             }
 
-            data.Accounts.RemoveAll(account => account.Id == reader.IdentityUserId);
             return data.DocGia.RemoveAll(item => item.Id == id) > 0;
         });
 
@@ -176,8 +182,8 @@ public sealed class DocGiaController(
     {
         if (await store.ReadAsync(data => data.DocGia.Any(item => item.Id != currentId &&
             item.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase)) ||
-            data.Accounts.Any(account => account.Id != reader.IdentityUserId &&
-            account.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase))))
+            data.Profiles.Any(profile => profile.AccountId != reader.IdentityUserId &&
+            profile.Email.Equals(reader.Email.Trim(), StringComparison.OrdinalIgnoreCase))))
         {
             ModelState.AddModelError(nameof(reader.Email), "Email này đã có trong danh sách độc giả.");
         }

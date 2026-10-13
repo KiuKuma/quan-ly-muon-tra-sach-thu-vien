@@ -5,7 +5,7 @@ using quan_ly_muon_tra_sach_thu_vien.Models;
 
 namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
-[Authorize(Roles = LibraryRoles.ThuThu + "," + LibraryRoles.QuanTriVien)]
+[Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
 public sealed class TheLoaiController(LibraryFileStore store) : Controller
 {
     public async Task<IActionResult> Index(string? search)
@@ -41,9 +41,11 @@ public sealed class TheLoaiController(LibraryFileStore store) : Controller
         return category is null ? NotFound() : View(category);
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public IActionResult Create() => View("Form", new TheLoai());
 
     [HttpPost]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("TenTheLoai,MoTa")] TheLoai category)
     {
@@ -73,6 +75,7 @@ public sealed class TheLoaiController(LibraryFileStore store) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public async Task<IActionResult> Edit(int id)
     {
         var category = await store.ReadAsync(data => data.TheLoai.FirstOrDefault(item => item.Id == id));
@@ -80,6 +83,7 @@ public sealed class TheLoaiController(LibraryFileStore store) : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("Id,TenTheLoai,MoTa")] TheLoai category)
     {
@@ -115,6 +119,7 @@ public sealed class TheLoaiController(LibraryFileStore store) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public async Task<IActionResult> Delete(int id)
     {
         var category = await store.ReadAsync(data => data.TheLoai.FirstOrDefault(item => item.Id == id));
@@ -122,6 +127,7 @@ public sealed class TheLoaiController(LibraryFileStore store) : Controller
     }
 
     [HttpPost, ActionName("Delete")]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {

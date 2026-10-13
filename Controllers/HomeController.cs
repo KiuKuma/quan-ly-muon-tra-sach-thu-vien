@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using quan_ly_muon_tra_sach_thu_vien.Data;
 using quan_ly_muon_tra_sach_thu_vien.Models;
@@ -8,6 +9,7 @@ namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
 public class HomeController(LibraryFileStore store) : Controller
 {
+    [Authorize]
     public async Task<IActionResult> Index()
     {
         var dashboard = await store.ReadAsync(data => new LibraryDashboardViewModel
@@ -16,8 +18,12 @@ public class HomeController(LibraryFileStore store) : Controller
             AvailableCopies = data.Sach.Sum(book => book.SoLuong),
             Categories = data.TheLoai.Count,
             Readers = data.DocGia.Count,
-            ActiveLoans = data.PhieuMuon.Count(loan => loan.TrangThai == "DangMuon"),
-            OverdueLoans = data.PhieuMuon.Count(loan => loan.TrangThai == "QuaHan")
+            TotalLoans = data.PhieuMuon.Count,
+            ActiveLoans = data.PhieuMuon.Count(loan => loan.TrangThai is "DangMuon" or "QuaHan"),
+            OverdueLoans = data.PhieuMuon.Count(loan =>
+                loan.TrangThai == "QuaHan" ||
+                (loan.TrangThai == "DangMuon" && loan.HanTra.Date < DateTime.UtcNow.Date)),
+            ReturnedLoans = data.PhieuMuon.Count(loan => loan.TrangThai == "DaTra")
         });
         return View(dashboard);
     }

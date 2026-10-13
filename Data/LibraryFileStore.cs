@@ -16,6 +16,7 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
     private static readonly string[] FileNames =
     [
         "users.txt",
+        "profiles.txt",
         "readers.txt",
         "categories.txt",
         "books.txt",
@@ -81,7 +82,7 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
                 return;
             }
 
-            await SaveUnsafeAsync(new LibraryData());
+            await SaveUnsafeAsync(await LoadUnsafeAsync());
         }
         finally
         {
@@ -121,6 +122,7 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
         return new LibraryData
         {
             Accounts = await ReadLinesAsync<LibraryAccount>("users.txt"),
+            Profiles = await ReadLinesAsync<LibraryUserProfile>("profiles.txt"),
             DocGia = await ReadLinesAsync<Models.DocGia>("readers.txt"),
             TheLoai = await ReadLinesAsync<Models.TheLoai>("categories.txt"),
             Sach = await ReadLinesAsync<Models.Sach>("books.txt"),
@@ -136,6 +138,7 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
         var files = new Dictionary<string, IEnumerable<string>>
         {
             ["users.txt"] = SerializeLines(data.Accounts),
+            ["profiles.txt"] = SerializeLines(data.Profiles),
             ["readers.txt"] = SerializeLines(data.DocGia),
             ["categories.txt"] = SerializeLines(data.TheLoai),
             ["books.txt"] = SerializeLines(data.Sach),

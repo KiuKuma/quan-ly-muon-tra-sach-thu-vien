@@ -11,46 +11,86 @@ public sealed class LibraryAccountService(
     private const int MaxFailedAttempts = 5;
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
 
-    public Task<RegisterResult> RegisterReaderAsync(RegisterViewModel model)
+    private static readonly (string Username, string PasswordHash, string Role, string Name, string Email,
+        string Phone, string Address)[] DefaultAccounts =
+    [
+        ("admin", "AQAAAAIAAYagAAAAEPKlpGZ+bqDia1ra+EWdpHxMYIwP7FrFkyUzKz6ggoU0dbVIa2d9y1r7d0Bm4dq+ag==",
+            LibraryRoles.QuanLy, "Nguyễn Minh Anh", "minh.anh@example.test",
+            "0901234501", "12 Đường Hoa Phượng, Quận 1"),
+        ("nhanvien1", "AQAAAAIAAYagAAAAEHny1VxBaHZO34xxy1RppzmMKX3YF8uW86XyGoEx7tRuFSW0joEnQw8gH/uMiu12cg==",
+            LibraryRoles.NhanVien, "Trần Gia Hân", "gia.han@example.test",
+            "0901234502", "28 Đường Ánh Dương, Quận 3"),
+        ("nhanvien2", "AQAAAAIAAYagAAAAEIt5wtdiI8295/SF+hysP4fvrVIh2OrRz/BRkRUACFIaaDxIvKja6m9o0wO+CkfG8g==",
+            LibraryRoles.NhanVien, "Lê Quốc Bảo", "quoc.bao@example.test",
+            "0901234503", "45 Đường Bình Minh, Quận 5"),
+        ("nhanvien3", "AQAAAAIAAYagAAAAEL9/UdfRzFWo2SLTiRYIVI8EePkOleZoZbITShbYqK9mwnYU7x5VpB1Mz1XhfE6hrw==",
+            LibraryRoles.NhanVien, "Phạm Thu Hà", "thu.ha@example.test",
+            "0901234504", "73 Đường Mùa Xuân, Quận 7")
+    ];
+
+    public Task EnsureDefaultAccountsAsync()
     {
         return store.UpdateAsync(data =>
         {
-            var email = model.Email.Trim();
-            if (data.Accounts.Any(account => NormalizeEmail(account.Email) == NormalizeEmail(email)) ||
-                data.DocGia.Any(reader => NormalizeEmail(reader.Email) == NormalizeEmail(email)))
+            var existingAccounts = data.Accounts
+                .Where(account => DefaultAccounts.Any(seed =>
+                    seed.Username.Equals(account.Username, StringComparison.OrdinalIgnoreCase)))
+                .GroupBy(account => account.Username, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+            var existingProfiles = data.Profiles
+                .GroupBy(profile => profile.AccountId, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+            var provisionedAccounts = new List<LibraryAccount>(DefaultAccounts.Length);
+            var provisionedProfiles = new List<LibraryUserProfile>(DefaultAccounts.Length);
+
+            foreach (var seed in DefaultAccounts)
             {
-                return RegisterResult.DuplicateEmail;
+                if (!existingAccounts.TryGetValue(seed.Username, out var account))
+                {
+                    account = new LibraryAccount
+                    {
+                        Username = seed.Username,
+                        PasswordHash = seed.PasswordHash
+                    };
+                }
+
+                account.Username = seed.Username;
+                account.Roles = [seed.Role];
+                if (string.IsNullOrEmpty(account.PasswordHash))
+                {
+                    account.PasswordHash = seed.PasswordHash;
+                }
+
+                existingProfiles.TryGetValue(account.Id, out var profile);
+                if (profile is null)
+                {
+                    profile = new LibraryUserProfile
+                    {
+                        AccountId = account.Id,
+                        HoTen = seed.Name,
+                        Email = seed.Email,
+                        SoDienThoai = seed.Phone,
+                        DiaChi = seed.Address
+                    };
+                }
+
+                provisionedProfiles.Add(profile);
+                provisionedAccounts.Add(account);
+                EnsureStaffRecord(data, account, profile);
             }
 
-            var account = new LibraryAccount
-            {
-                HoTen = model.HoTen.Trim(),
-                Email = email,
-                SoDienThoai = model.SoDienThoai?.Trim(),
-                Roles = [LibraryRoles.DocGia]
-            };
-            account.PasswordHash = passwordHasher.HashPassword(account, model.Password);
-            data.Accounts.Add(account);
-            data.DocGia.Add(new DocGia
-            {
-                Id = NextId(data.DocGia.Select(reader => reader.Id)),
-                HoTen = account.HoTen,
-                Email = email,
-                SoDienThoai = account.SoDienThoai,
-                DiaChi = model.DiaChi.Trim(),
-                IdentityUserId = account.Id,
-                NgayDangKy = DateTime.UtcNow
-            });
-            return RegisterResult.Success;
+            data.Accounts = provisionedAccounts;
+            data.Profiles = provisionedProfiles;
+            return true;
         });
     }
 
-    public Task<LoginResult> LoginAsync(string email, string password)
+    public Task<LoginResult> LoginAsync(string username, string password)
     {
         return store.UpdateAsync(data =>
         {
-            var normalizedEmail = NormalizeEmail(email);
-            var account = data.Accounts.FirstOrDefault(item => NormalizeEmail(item.Email) == normalizedEmail);
+            var account = data.Accounts.FirstOrDefault(item =>
+                item.Username.Equals(username.Trim(), StringComparison.OrdinalIgnoreCase));
             if (account is null)
             {
                 return new LoginResult(LoginStatus.InvalidCredentials, null);
@@ -86,140 +126,80 @@ public sealed class LibraryAccountService(
         });
     }
 
-    public Task<bool> EnsureLibrarianAsync(string email, string password)
+    public Task<ProfileUpdateResult> UpdateProfileAsync(string accountId, LibraryProfileViewModel model)
     {
-        return store.UpdateAsync(data =>
-        {
-            var normalizedEmail = NormalizeEmail(email);
-            var account = data.Accounts.FirstOrDefault(item => NormalizeEmail(item.Email) == normalizedEmail);
-            if (account is null)
-            {
-                account = new LibraryAccount
-                {
-                    HoTen = "Thủ thư quản trị",
-                    Email = email.Trim(),
-                    Roles = [LibraryRoles.ThuThu]
-                };
-                account.PasswordHash = passwordHasher.HashPassword(account, password);
-                data.Accounts.Add(account);
-            }
-            else if (!account.Roles.Contains(LibraryRoles.ThuThu))
-            {
-                account.Roles.Add(LibraryRoles.ThuThu);
-            }
-
-            if (!data.NhanVien.Any(staff => staff.IdentityUserId == account.Id))
-            {
-                data.NhanVien.Add(new NhanVien
-                {
-                    Id = NextId(data.NhanVien.Select(staff => staff.Id)),
-                    HoTen = account.HoTen,
-                    Email = account.Email,
-                    SoDienThoai = account.SoDienThoai,
-                    IdentityUserId = account.Id
-                });
-            }
-
-            return true;
-        });
-    }
-
-    public Task EnsureInitialAdministratorAsync(string email)
-    {
-        return store.UpdateAsync(data =>
-        {
-            if (data.Accounts.Any(item => item.Roles.Contains(LibraryRoles.QuanTriVien)))
-            {
-                return true;
-            }
-
-            var account = data.Accounts.FirstOrDefault(item =>
-                NormalizeEmail(item.Email) == NormalizeEmail(email));
-            if (account is null)
-            {
-                return false;
-            }
-
-            account.Roles.Clear();
-            account.Roles.Add(LibraryRoles.QuanTriVien);
-            EnsureStaffRecord(data, account);
-            return true;
-        });
-    }
-
-    public Task<RoleChangeResult> SetRoleAsync(string accountId, string role)
-    {
-        if (role is not (LibraryRoles.QuanTriVien or LibraryRoles.ThuThu or LibraryRoles.DocGia))
-        {
-            return Task.FromResult(RoleChangeResult.InvalidRole);
-        }
-
         return store.UpdateAsync(data =>
         {
             var account = data.Accounts.FirstOrDefault(item => item.Id == accountId);
             if (account is null)
             {
-                return RoleChangeResult.NotFound;
+                return ProfileUpdateResult.NotFound;
             }
+
+            var profile = data.Profiles.FirstOrDefault(item => item.AccountId == accountId);
+            if (profile is null)
+            {
+                return ProfileUpdateResult.NotFound;
+            }
+
+            var email = model.Email.Trim();
+            if (data.Profiles.Any(item => item.AccountId != accountId &&
+                    item.Email.Equals(email, StringComparison.OrdinalIgnoreCase)) ||
+                data.DocGia.Any(reader => reader.Email.Equals(email, StringComparison.OrdinalIgnoreCase) &&
+                    reader.IdentityUserId != accountId))
+            {
+                return ProfileUpdateResult.DuplicateEmail;
+            }
+
+            profile.HoTen = model.HoTen.Trim();
+            profile.Email = email;
+            profile.SoDienThoai = model.SoDienThoai?.Trim();
+            profile.DiaChi = model.DiaChi.Trim();
 
             var staff = data.NhanVien.FirstOrDefault(item => item.IdentityUserId == accountId);
-            var hadAdministratorRole = account.Roles.Contains(LibraryRoles.QuanTriVien);
-            var hadStaffRole = account.Roles.Contains(LibraryRoles.ThuThu);
-
-            if (hadAdministratorRole && role != LibraryRoles.QuanTriVien &&
-                data.Accounts.Count(item => item.Roles.Contains(LibraryRoles.QuanTriVien)) <= 1)
+            if (staff is not null)
             {
-                return RoleChangeResult.LastAdministrator;
+                staff.HoTen = profile.HoTen;
+                staff.Email = profile.Email;
+                staff.SoDienThoai = profile.SoDienThoai;
             }
 
-            if (hadStaffRole && role == LibraryRoles.DocGia && staff is not null &&
-                data.PhieuMuon.Any(loan => loan.NhanVienId == staff.Id))
+            var reader = data.DocGia.FirstOrDefault(item => item.IdentityUserId == accountId);
+            if (reader is not null)
             {
-                return RoleChangeResult.HasLoans;
+                reader.HoTen = profile.HoTen;
+                reader.Email = profile.Email;
+                reader.SoDienThoai = profile.SoDienThoai;
+                reader.DiaChi = profile.DiaChi;
             }
 
-            account.Roles.Clear();
-            account.Roles.Add(role);
-
-            if (role is LibraryRoles.QuanTriVien or LibraryRoles.ThuThu)
-            {
-                EnsureStaffRecord(data, account);
-            }
-            else if (staff is not null)
-            {
-                data.NhanVien.Remove(staff);
-            }
-
-            return RoleChangeResult.Success;
+            return ProfileUpdateResult.Success;
         });
     }
 
-    private static void EnsureStaffRecord(LibraryData data, LibraryAccount account)
+    private static void EnsureStaffRecord(
+        LibraryData data,
+        LibraryAccount account,
+        LibraryUserProfile profile)
     {
-        if (data.NhanVien.Any(staff => staff.IdentityUserId == account.Id))
+        var staff = data.NhanVien.FirstOrDefault(item => item.IdentityUserId == account.Id);
+        if (staff is null)
         {
+            data.NhanVien.Add(new NhanVien
+            {
+                Id = data.NhanVien.Select(item => item.Id).DefaultIfEmpty(0).Max() + 1,
+                HoTen = profile.HoTen,
+                Email = profile.Email,
+                SoDienThoai = profile.SoDienThoai,
+                IdentityUserId = account.Id
+            });
             return;
         }
 
-        data.NhanVien.Add(new NhanVien
-        {
-            Id = NextId(data.NhanVien.Select(staff => staff.Id)),
-            HoTen = account.HoTen,
-            Email = account.Email,
-            SoDienThoai = account.SoDienThoai,
-            IdentityUserId = account.Id
-        });
+        staff.HoTen = profile.HoTen;
+        staff.Email = profile.Email;
+        staff.SoDienThoai = profile.SoDienThoai;
     }
-
-    public static string NormalizeEmail(string email) => email.Trim().ToUpperInvariant();
-
-    private static int NextId(IEnumerable<int> ids) => ids.DefaultIfEmpty(0).Max() + 1;
-}
-
-public enum RegisterResult
-{
-    Success,
-    DuplicateEmail
 }
 
 public enum LoginStatus
@@ -229,13 +209,11 @@ public enum LoginStatus
     LockedOut
 }
 
-public enum RoleChangeResult
+public enum ProfileUpdateResult
 {
     Success,
     NotFound,
-    LastAdministrator,
-    InvalidRole,
-    HasLoans
+    DuplicateEmail
 }
 
 public sealed record LoginResult(LoginStatus Status, LibraryAccount? Account);

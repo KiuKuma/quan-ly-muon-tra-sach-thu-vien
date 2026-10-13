@@ -6,6 +6,8 @@ public sealed class LibraryDashboardViewModel
     public int AvailableCopies { get; set; }
     public int Categories { get; set; }
     public int Readers { get; set; }
+    public int TotalLoans { get; set; }
     public int ActiveLoans { get; set; }
     public int OverdueLoans { get; set; }
+    public int ReturnedLoans { get; set; }
 }

@@ -14,40 +14,6 @@ public sealed class AccountController(
 {
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult Register() => View(new RegisterViewModel());
-
-    [HttpPost]
-    [AllowAnonymous]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
-
-        var result = await accounts.RegisterReaderAsync(model);
-        if (result == RegisterResult.DuplicateEmail)
-        {
-            ModelState.AddModelError(nameof(model.Email), "Email này đã được đăng ký.");
-            return View(model);
-        }
-
-        var email = LibraryAccountService.NormalizeEmail(model.Email);
-        var account = await store.ReadAsync(data => data.Accounts.FirstOrDefault(item =>
-            item.Email.Equals(email, StringComparison.OrdinalIgnoreCase)));
-        if (account is null)
-        {
-            ModelState.AddModelError(string.Empty, "Không thể tạo tài khoản. Vui lòng thử lại.");
-            return View(model);
-        }
-
-        await SignInAsync(account.Id, account.HoTen, account.Email, account.Roles, isPersistent: false);
-        return RedirectToAction("Index", "Home");
-    }
-
-    [HttpGet]
-    [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null) => View(new LoginViewModel { ReturnUrl = returnUrl });
 
     [HttpPost]
@@ -60,11 +26,18 @@ public sealed class AccountController(
             return View(model);
         }
 
-        var result = await accounts.LoginAsync(model.Email, model.Password);
+        var result = await accounts.LoginAsync(model.Username, model.Password);
         if (result.Status == LoginStatus.Success && result.Account is not null)
         {
-            await SignInAsync(result.Account.Id, result.Account.HoTen,
-                result.Account.Email, result.Account.Roles, model.RememberMe);
+            var profile = await store.ReadAsync(data =>
+                data.Profiles.FirstOrDefault(item => item.AccountId == result.Account.Id));
+            if (profile is null)
+            {
+                throw new InvalidDataException($"Tài khoản {result.Account.Username} chưa có hồ sơ người dùng.");
+            }
+
+            await SignInAsync(result.Account.Id, result.Account.Username,
+                profile.Email, result.Account.Roles, model.RememberMe);
             return LocalRedirect(model.ReturnUrl is not null && Url.IsLocalUrl(model.ReturnUrl)
                 ? model.ReturnUrl
                 : Url.Action("Index", "Home")!);
@@ -73,8 +46,69 @@ public sealed class AccountController(
         ModelState.AddModelError(string.Empty,
             result.Status == LoginStatus.LockedOut
                 ? "Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau 15 phút."
-                : "Email hoặc mật khẩu không chính xác.");
+                : "Tên tài khoản hoặc mật khẩu không chính xác.");
         return View(model);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Profile()
+    {
+        var accountId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var profileData = await store.ReadAsync(data =>
+        {
+            var account = data.Accounts.FirstOrDefault(item => item.Id == accountId);
+            var profile = data.Profiles.FirstOrDefault(item => item.AccountId == accountId);
+            return (Account: account, Profile: profile);
+        });
+        if (profileData.Account is null || profileData.Profile is null)
+        {
+            return NotFound();
+        }
+
+        return View(new LibraryProfileViewModel
+        {
+            Username = profileData.Account.Username,
+            HoTen = profileData.Profile.HoTen,
+            Email = profileData.Profile.Email,
+            SoDienThoai = profileData.Profile.SoDienThoai,
+            DiaChi = profileData.Profile.DiaChi,
+            Role = profileData.Account.Roles.FirstOrDefault() ?? string.Empty
+        });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Profile(LibraryProfileViewModel model)
+    {
+        var accountId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(accountId))
+        {
+            return Challenge();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await PopulateProfileIdentityAsync(model, accountId);
+            return View(model);
+        }
+
+        var result = await accounts.UpdateProfileAsync(accountId, model);
+        if (result == ProfileUpdateResult.DuplicateEmail)
+        {
+            ModelState.AddModelError(nameof(model.Email), "Email này đã được sử dụng.");
+            await PopulateProfileIdentityAsync(model, accountId);
+            return View(model);
+        }
+
+        if (result == ProfileUpdateResult.NotFound)
+        {
+            return NotFound();
+        }
+
+        TempData["Success"] = "Đã cập nhật hồ sơ người dùng.";
+        return RedirectToAction(nameof(Profile));
     }
 
     [HttpPost]
@@ -89,6 +123,14 @@ public sealed class AccountController(
     [HttpGet]
     [AllowAnonymous]
     public IActionResult AccessDenied() => View();
+
+    private async Task PopulateProfileIdentityAsync(LibraryProfileViewModel model, string accountId)
+    {
+        var account = await store.ReadAsync(data =>
+            data.Accounts.FirstOrDefault(item => item.Id == accountId));
+        model.Username = account?.Username ?? string.Empty;
+        model.Role = account?.Roles.FirstOrDefault() ?? string.Empty;
+    }
 
     private async Task SignInAsync(
         string id,

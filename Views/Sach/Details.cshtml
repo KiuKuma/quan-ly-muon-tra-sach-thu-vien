@@ -8,7 +8,10 @@
         <p class="eyebrow">SÁCH</p>
     <div class="page-heading compact-heading">
         <h1>@Model.TenSach</h1>
-        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa sách</a>
+        @if (User.IsInRole(LibraryRoles.QuanLy))
+        {
+            <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa sách</a>
+        }
     </div>
     <dl class="detail-list">
         <dt>Tác giả</dt><dd>@Model.TacGia</dd>

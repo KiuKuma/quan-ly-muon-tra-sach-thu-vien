@@ -7,7 +7,10 @@
     <p class="eyebrow">THỂ LOẠI</p>
     <div class="page-heading compact-heading">
         <h1>@Model.TenTheLoai</h1>
-        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa thể loại</a>
+        @if (User.IsInRole(LibraryRoles.QuanLy))
+        {
+            <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa thể loại</a>
+        }
     </div>
     <dl class="detail-list">
         <dt>Mô tả</dt><dd>@(string.IsNullOrWhiteSpace(Model.MoTa) ? "Chưa có mô tả" : Model.MoTa)</dd>

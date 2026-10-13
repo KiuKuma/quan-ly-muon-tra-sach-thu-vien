@@ -92,19 +92,26 @@ public sealed class LibrarySampleDataSeeder(LibraryFileStore store)
                 });
             }
 
-            foreach (var account in data.Accounts.Where(account => account.Roles.Contains(LibraryRoles.ThuThu)))
+            foreach (var account in data.Accounts.Where(account => account.Roles.Contains(LibraryRoles.NhanVien) ||
+                                                                     account.Roles.Contains(LibraryRoles.QuanLy)))
             {
                 if (data.NhanVien.Any(staff => staff.IdentityUserId == account.Id))
                 {
                     continue;
                 }
 
+                var profile = data.Profiles.FirstOrDefault(item => item.AccountId == account.Id);
+                if (profile is null)
+                {
+                    throw new InvalidDataException($"Tài khoản {account.Username} chưa có hồ sơ người dùng.");
+                }
+
                 data.NhanVien.Add(new NhanVien
                 {
                     Id = NextId(data.NhanVien.Select(staff => staff.Id)),
-                    HoTen = account.HoTen,
-                    Email = account.Email,
-                    SoDienThoai = account.SoDienThoai,
+                    HoTen = profile.HoTen,
+                    Email = profile.Email,
+                    SoDienThoai = profile.SoDienThoai,
                     IdentityUserId = account.Id
                 });
             }
@@ -121,7 +128,8 @@ public sealed class LibrarySampleDataSeeder(LibraryFileStore store)
             .OrderBy(reader => reader.Id)
             .ToList();
         var librarian = data.NhanVien.FirstOrDefault(staff =>
-            data.Accounts.Any(account => account.Id == staff.IdentityUserId && account.Roles.Contains(LibraryRoles.ThuThu)));
+            data.Accounts.Any(account => account.Id == staff.IdentityUserId &&
+                (account.Roles.Contains(LibraryRoles.NhanVien) || account.Roles.Contains(LibraryRoles.QuanLy))));
         if (sampleReaders.Count < 3 || librarian is null || data.Sach.Count < 3)
         {
             return;
@@ -179,6 +187,8 @@ public sealed class LibrarySampleDataSeeder(LibraryFileStore store)
             SachId = books[index].Id,
             SoLuong = 1
         }));
+        books[0].SoLuong--;
+        books[1].SoLuong--;
     }
 
     private static int NextId(IEnumerable<int> ids) => ids.DefaultIfEmpty(0).Max() + 1;

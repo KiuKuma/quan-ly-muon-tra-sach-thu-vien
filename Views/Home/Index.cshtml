@@ -3,85 +3,94 @@
 }
 
 <section class="dashboard-heading">
-    <p class="eyebrow">QUẢN LÝ THƯ VIỆN</p>
-    <h1>Không gian thư viện</h1>
-    <p class="text-secondary mb-0">
-        @if (User.IsInRole(LibraryRoles.ThuThu) || User.IsInRole(LibraryRoles.QuanTriVien))
-        {
-            <span>Tổng quan hoạt động và truy cập nhanh các khu vực quản lý.</span>
-        }
-        else if (User.Identity?.IsAuthenticated == true)
-        {
-            <span>Chào @User.Identity.Name. Chúc bạn có một hành trình đọc sách thú vị.</span>
-        }
-        else
-        {
-            <span>Đăng nhập hoặc tạo tài khoản để bắt đầu sử dụng thư viện.</span>
-        }
-    </p>
+    <p class="eyebrow"><span class="eyebrow-mark"></span> QUẢN LÝ THƯ VIỆN</p>
+    <h1>Tổng quan thư viện</h1>
+    <p class="dashboard-subtitle">Theo dõi hoạt động và truy cập nhanh các chức năng.</p>
 </section>
 
-@if (User.IsInRole(LibraryRoles.ThuThu) || User.IsInRole(LibraryRoles.QuanTriVien))
+@if (User.IsInRole(LibraryRoles.NhanVien) || User.IsInRole(LibraryRoles.QuanLy))
 {
     <section class="dashboard-metrics" aria-label="Tổng quan dữ liệu">
         <div class="metric-item">
-            <span class="metric-value">@Model.BookTitles</span>
-            <span class="metric-label">Đầu sách</span>
+            <span class="metric-icon metric-icon-books" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16M8 7h8M8 11h8"/></svg>
+            </span>
+            <span class="metric-copy"><span class="metric-value">@Model.BookTitles</span><span class="metric-label">Đầu sách</span></span>
         </div>
         <div class="metric-item">
-            <span class="metric-value">@Model.AvailableCopies</span>
-            <span class="metric-label">Tổng bản sách</span>
+            <span class="metric-icon metric-icon-copies" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 4h13v15H7z"/><path d="M4 7v14h13M10 8h7M10 12h7"/></svg>
+            </span>
+            <span class="metric-copy"><span class="metric-value">@Model.AvailableCopies</span><span class="metric-label">Bản sách còn</span></span>
         </div>
         <div class="metric-item">
-            <span class="metric-value">@Model.Readers</span>
-            <span class="metric-label">Độc giả</span>
+            <span class="metric-icon metric-icon-readers" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.5a3 3 0 0 1 0 5.8M17 14a5 5 0 0 1 3.5 4.8"/></svg>
+            </span>
+            <span class="metric-copy"><span class="metric-value">@Model.Readers</span><span class="metric-label">Độc giả</span></span>
         </div>
         <div class="metric-item metric-alert">
-            <span class="metric-value">@Model.OverdueLoans</span>
-            <span class="metric-label">Phiếu quá hạn</span>
+            <span class="metric-icon metric-icon-overdue" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </span>
+            <span class="metric-copy"><span class="metric-value">@Model.OverdueLoans</span><span class="metric-label">Phiếu quá hạn</span></span>
         </div>
     </section>
 
-    <section class="dashboard-links" aria-label="Khu vực quản lý">
-        <a class="dashboard-link" asp-controller="Sach" asp-action="Index">
-            <span class="dashboard-link-title">Sách</span>
-            <span class="dashboard-link-description">@Model.BookTitles đầu sách · @Model.AvailableCopies bản</span>
-            <span class="dashboard-link-arrow" aria-hidden="true">→</span>
+    <section class="dashboard-section" aria-label="Khu vực quản lý">
+        <div class="section-heading">
+            <div><p class="eyebrow">TRUY CẬP NHANH</p><h2>Chức năng thư viện</h2></div>
+            <span class="section-caption">Chọn một khu vực để bắt đầu</span>
+        </div>
+        <div class="dashboard-links">
+        <a class="dashboard-link dashboard-link-books" asp-controller="Sach" asp-action="Index">
+            <span class="dashboard-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16M8 7h8M8 11h8"/></svg></span>
+            <span class="dashboard-link-content"><span class="dashboard-link-title">Quản lý sách</span><span class="dashboard-link-description">@Model.BookTitles đầu sách · @Model.AvailableCopies bản</span></span>
+            <span class="dashboard-link-arrow" aria-hidden="true">↗</span>
         </a>
-        <a class="dashboard-link" asp-controller="TheLoai" asp-action="Index">
-            <span class="dashboard-link-title">Thể loại</span>
-            <span class="dashboard-link-description">@Model.Categories nhóm chủ đề</span>
-            <span class="dashboard-link-arrow" aria-hidden="true">→</span>
+        <a class="dashboard-link dashboard-link-readers" asp-controller="DocGia" asp-action="Index">
+            <span class="dashboard-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.5a3 3 0 0 1 0 5.8M17 14a5 5 0 0 1 3.5 4.8"/></svg></span>
+            <span class="dashboard-link-content"><span class="dashboard-link-title">Quản lý độc giả</span><span class="dashboard-link-description">@Model.Readers hồ sơ bạn đọc</span></span>
+            <span class="dashboard-link-arrow" aria-hidden="true">↗</span>
         </a>
-        <a class="dashboard-link" asp-controller="DocGia" asp-action="Index">
-            <span class="dashboard-link-title">Độc giả</span>
-            <span class="dashboard-link-description">@Model.Readers hồ sơ bạn đọc</span>
-            <span class="dashboard-link-arrow" aria-hidden="true">→</span>
+        <a class="dashboard-link dashboard-link-loans" asp-controller="MuonTra" asp-action="Index">
+            <span class="dashboard-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h5M8 16h3"/><path d="m15 15 2 2 4-5"/></svg></span>
+            <span class="dashboard-link-content"><span class="dashboard-link-title">Quản lý mượn trả sách</span><span class="dashboard-link-description">@Model.ActiveLoans phiếu đang mượn · @Model.OverdueLoans quá hạn</span></span>
+            <span class="dashboard-link-arrow" aria-hidden="true">↗</span>
         </a>
+        <a class="dashboard-link dashboard-link-reports" asp-controller="BaoCao" asp-action="Index">
+            <span class="dashboard-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 5-6"/><circle cx="7" cy="15" r=".7"/><circle cx="11" cy="11" r=".7"/><circle cx="14" cy="13" r=".7"/><circle cx="19" cy="7" r=".7"/></svg></span>
+            <span class="dashboard-link-content"><span class="dashboard-link-title">Báo cáo thống kê</span><span class="dashboard-link-description">Tổng hợp tình hình hoạt động thư viện</span></span>
+            <span class="dashboard-link-arrow" aria-hidden="true">↗</span>
+        </a>
+        @if (User.IsInRole(LibraryRoles.QuanLy))
+        {
+            <a class="dashboard-link dashboard-link-staff" asp-controller="TaiKhoan" asp-action="Index">
+                <span class="dashboard-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M17 8h4M19 6v4M17 15h4M17 18h4"/></svg></span>
+                <span class="dashboard-link-content"><span class="dashboard-link-title">Quản lý nhân viên</span><span class="dashboard-link-description">Xem danh sách và hồ sơ nhân viên</span></span>
+                <span class="dashboard-link-arrow" aria-hidden="true">↗</span>
+            </a>
+        }
+        </div>
     </section>
 
     <p class="dashboard-note">
         @Model.ActiveLoans phiếu đang mượn
         <span aria-hidden="true">·</span>
         @Model.OverdueLoans phiếu quá hạn
+        <span aria-hidden="true">·</span>
+        @Model.Categories thể loại sách
     </p>
 }
 else
 {
     <div class="reader-welcome">
-        <span class="reader-welcome-mark" aria-hidden="true">Đ</span>
         <div>
-            <h2>@(User.Identity?.IsAuthenticated == true ? "Tài khoản độc giả" : "Bắt đầu hành trình đọc")</h2>
-            <p class="text-secondary mb-0">@(User.Identity?.IsAuthenticated == true
-                ? "Tài khoản của bạn đã sẵn sàng. Hãy ghé thư viện để khám phá những cuốn sách phù hợp."
-                : "Tạo tài khoản miễn phí để trở thành độc giả của thư viện.")</p>
+            <h2>Đăng nhập hệ thống</h2>
+            <p class="text-secondary mb-0">Chỉ tài khoản quản lý và nhân viên được cấp mới có thể sử dụng các chức năng.</p>
         </div>
-        @if (User.Identity?.IsAuthenticated != true)
-        {
-            <div class="account-actions">
-                <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Đăng ký độc giả</a>
-                <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-            </div>
-        }
+        <div class="account-actions">
+            <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+        </div>
     </div>
 }

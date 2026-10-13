@@ -6,7 +6,7 @@ using quan_ly_muon_tra_sach_thu_vien.Models;
 
 namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
-[Authorize(Roles = LibraryRoles.ThuThu + "," + LibraryRoles.QuanTriVien)]
+[Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
 public sealed class SachController(LibraryFileStore store) : Controller
 {
     public async Task<IActionResult> Index(string? search)
@@ -49,6 +49,7 @@ public sealed class SachController(LibraryFileStore store) : Controller
         return book is null ? NotFound() : View(book);
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public async Task<IActionResult> Create()
     {
         await PopulateCategoriesAsync();
@@ -56,6 +57,7 @@ public sealed class SachController(LibraryFileStore store) : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("TenSach,TacGia,ISBN,NhaXuatBan,NamXuatBan,SoLuong,TheLoaiId")] Sach book)
     {
@@ -91,6 +93,7 @@ public sealed class SachController(LibraryFileStore store) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public async Task<IActionResult> Edit(int id)
     {
         var book = await store.ReadAsync(data => data.Sach.FirstOrDefault(item => item.Id == id));
@@ -104,6 +107,7 @@ public sealed class SachController(LibraryFileStore store) : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("Id,TenSach,TacGia,ISBN,NhaXuatBan,NamXuatBan,SoLuong,TheLoaiId")] Sach book)
     {
@@ -149,6 +153,7 @@ public sealed class SachController(LibraryFileStore store) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     public async Task<IActionResult> Delete(int id)
     {
         var book = await store.ReadAsync(data =>
@@ -165,6 +170,7 @@ public sealed class SachController(LibraryFileStore store) : Controller
     }
 
     [HttpPost, ActionName("Delete")]
+    [Authorize(Roles = LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {

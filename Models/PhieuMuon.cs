@@ -12,6 +12,7 @@ public sealed class PhieuMuon
     public int NhanVienId { get; set; }
     [JsonIgnore]
     public NhanVien? NhanVien { get; set; }
+    public string? TenTaiKhoanNhanVien { get; set; }
 
     [Display(Name = "Ngày mượn")]
     public DateTime NgayMuon { get; set; } = DateTime.UtcNow;

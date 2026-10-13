@@ -1,0 +1,49 @@
+@model LibraryProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ người dùng";
+}
+
+<section class="auth-panel">
+    <p class="eyebrow">TÀI KHOẢN / HỒ SƠ</p>
+    <h1>Hồ sơ người dùng</h1>
+    <p class="text-secondary">Cập nhật thông tin liên hệ. Tên tài khoản và mật khẩu đăng nhập không nằm trong hồ sơ này.</p>
+    <form asp-action="Profile" method="post" class="form-grid">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div>
+            <label class="form-label">Tên tài khoản</label>
+            <input value="@Model.Username" class="form-control" readonly />
+        </div>
+        <div class="profile-role">
+            <span class="form-label">Vai trò hiện tại</span>
+            <span class="role-badge @(Model.Role == LibraryRoles.QuanLy ? "role-badge-manager" : "role-badge-employee")">
+                <span class="role-badge-dot" aria-hidden="true"></span>
+                @Model.Role
+            </span>
+        </div>
+        <div>
+            <label asp-for="HoTen" class="form-label"></label>
+            <input asp-for="HoTen" class="form-control" autocomplete="name" />
+            <span asp-validation-for="HoTen" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" autocomplete="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="SoDienThoai" class="form-label"></label>
+            <input asp-for="SoDienThoai" class="form-control" autocomplete="tel" />
+            <span asp-validation-for="SoDienThoai" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="DiaChi" class="form-label"></label>
+            <input asp-for="DiaChi" class="form-control" autocomplete="street-address" />
+            <span asp-validation-for="DiaChi" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Lưu hồ sơ</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

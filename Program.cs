@@ -23,11 +23,16 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         var accountId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var store = context.HttpContext.RequestServices.GetRequiredService<LibraryFileStore>();
-        var account = string.IsNullOrWhiteSpace(accountId)
-            ? null
-            : await store.ReadAsync(data => data.Accounts.FirstOrDefault(item => item.Id == accountId));
+        var accountData = string.IsNullOrWhiteSpace(accountId)
+            ? (Account: (LibraryAccount?)null, Profile: (LibraryUserProfile?)null)
+            : await store.ReadAsync(data =>
+            {
+                var account = data.Accounts.FirstOrDefault(item => item.Id == accountId);
+                var profile = data.Profiles.FirstOrDefault(item => item.AccountId == accountId);
+                return (Account: account, Profile: profile);
+            });
 
-        if (account is null)
+        if (accountData.Account is null || accountData.Profile is null)
         {
             context.RejectPrincipal();
             await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -38,23 +43,23 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             .Select(claim => claim.Value)
             .OrderBy(role => role, StringComparer.Ordinal)
             .ToArray();
-        var savedRoles = account.Roles
+        var savedRoles = accountData.Account.Roles
             .OrderBy(role => role, StringComparer.Ordinal)
             .ToArray();
         var currentName = context.Principal.FindFirst(ClaimTypes.Name)?.Value;
         var currentEmail = context.Principal.FindFirst(ClaimTypes.Email)?.Value;
 
         if (currentRoles.SequenceEqual(savedRoles, StringComparer.Ordinal) &&
-            currentName == account.HoTen && currentEmail == account.Email)
+            currentName == accountData.Account.Username && currentEmail == accountData.Profile.Email)
         {
             return;
         }
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, account.Id),
-            new(ClaimTypes.Name, account.HoTen),
-            new(ClaimTypes.Email, account.Email)
+            new(ClaimTypes.NameIdentifier, accountData.Account.Id),
+            new(ClaimTypes.Name, accountData.Account.Username),
+            new(ClaimTypes.Email, accountData.Profile.Email)
         };
         claims.AddRange(savedRoles.Select(role => new Claim(ClaimTypes.Role, role)));
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -88,7 +93,6 @@ await LibraryDataInitializer.InitializeAsync(
     app.Services.GetRequiredService<LibraryFileStore>(),
     app.Services.GetRequiredService<LibrarySampleDataSeeder>(),
     app.Services.GetRequiredService<LibraryAccountService>(),
-    app.Configuration,
     app.Logger);
 
 app.Run();

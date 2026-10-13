@@ -1,37 +1,30 @@
 @model IEnumerable<AccountSummaryViewModel>
 @{
-    ViewData["Title"] = "Phân quyền tài khoản";
+    ViewData["Title"] = "Quản lý nhân viên";
 }
 
 <div class="page-heading">
     <div>
-        <p class="eyebrow">QUẢN TRỊ / TÀI KHOẢN</p>
-        <h1>Phân quyền tài khoản</h1>
-        <p class="text-secondary">Chỉ Quản trị viên mới được thay đổi vai trò tài khoản.</p>
+        <p class="eyebrow">QUẢN LÝ / NHÂN SỰ</p>
+        <h1>Quản lý nhân viên</h1>
+        <p class="text-secondary">Danh sách các tài khoản nhân viên và quản lý được cấp quyền truy cập.</p>
     </div>
 </div>
 
 <div class="table-responsive">
     <table class="table align-middle">
-        <thead><tr><th>Họ tên</th><th>Email</th><th>Vai trò</th><th class="text-end">Thao tác</th></tr></thead>
+        <thead><tr><th>Tên tài khoản</th><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Vai trò</th><th></th></tr></thead>
         <tbody>
         @foreach (var account in Model)
         {
             <tr>
+                <td class="fw-semibold">@account.Username</td>
                 <td class="fw-semibold">@account.HoTen</td>
                 <td>@account.Email</td>
+                <td>@(account.SoDienThoai ?? "—")</td>
                 <td>@account.Role</td>
                 <td class="text-end">
-                    <form asp-action="SetRole" method="post" class="d-inline role-form">
-                        <input type="hidden" name="id" value="@account.Id" />
-                        <label class="visually-hidden" for="role-@account.Id">Vai trò của @account.HoTen</label>
-                        <select id="role-@account.Id" name="role" class="form-select form-select-sm role-select">
-                            <option value="Độc giả" selected="@(account.Role == "Độc giả")">Độc giả</option>
-                            <option value="Thủ thư" selected="@(account.Role == "Thủ thư")">Thủ thư</option>
-                            <option value="Quản trị viên" selected="@(account.Role == "Quản trị viên")">Quản trị viên</option>
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-primary">Lưu vai trò</button>
-                    </form>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@account.Id">Sửa hồ sơ</a>
                 </td>
             </tr>
         }

@@ -9,7 +9,10 @@
         <h1>Sách</h1>
         <p class="text-secondary">@Model.Count() đầu sách</p>
     </div>
-    <a class="btn btn-primary" asp-action="Create">Thêm sách</a>
+    @if (User.IsInRole(LibraryRoles.QuanLy))
+    {
+        <a class="btn btn-primary" asp-action="Create">Thêm sách</a>
+    }
 </div>
 
 <form asp-action="Index" method="get" class="search-row">
@@ -41,8 +44,11 @@ else
                     <td class="text-end">@book.SoLuong</td>
                     <td class="text-end text-nowrap">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@book.Id">Xem</a>
-                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@book.Id">Sửa</a>
-                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@book.Id">Xóa</a>
+                        @if (User.IsInRole(LibraryRoles.QuanLy))
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@book.Id">Sửa</a>
+                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@book.Id">Xóa</a>
+                        }
                     </td>
                 </tr>
             }

@@ -9,7 +9,10 @@
         <h1>Thể loại</h1>
         <p class="text-secondary">@Model.Count() thể loại</p>
     </div>
-    <a class="btn btn-primary" asp-action="Create">Thêm thể loại</a>
+    @if (User.IsInRole(LibraryRoles.QuanLy))
+    {
+        <a class="btn btn-primary" asp-action="Create">Thêm thể loại</a>
+    }
 </div>
 
 <form asp-action="Index" method="get" class="search-row">
@@ -39,8 +42,11 @@ else
                     <td class="text-secondary">@(string.IsNullOrWhiteSpace(category.MoTa) ? "—" : category.MoTa)</td>
                     <td class="text-end text-nowrap">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@category.Id">Xem</a>
-                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@category.Id">Sửa</a>
-                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@category.Id">Xóa</a>
+                        @if (User.IsInRole(LibraryRoles.QuanLy))
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@category.Id">Sửa</a>
+                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@category.Id">Xóa</a>
+                        }
                     </td>
                 </tr>
             }
