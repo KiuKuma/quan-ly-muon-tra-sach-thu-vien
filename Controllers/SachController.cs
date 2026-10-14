@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using quan_ly_muon_tra_sach_thu_vien.Data;
 using quan_ly_muon_tra_sach_thu_vien.Models;
+using quan_ly_muon_tra_sach_thu_vien.Models.ViewModels;
 
 namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
 [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
 public sealed class SachController(LibraryFileStore store) : Controller
 {
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         ViewBag.Search = search;
         return View(await store.ReadAsync(data =>
@@ -22,8 +23,9 @@ public sealed class SachController(LibraryFileStore store) : Controller
             }
 
             var categories = data.TheLoai.ToDictionary(category => category.Id);
-            var results = books.OrderBy(book => book.TenSach).ToList();
-            foreach (var book in results)
+            var results = PagedResult<Sach>.Create(
+                books.OrderBy(book => book.TenSach), page);
+            foreach (var book in results.Items)
             {
                 if (book.TheLoaiId is int categoryId)
                 {

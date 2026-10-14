@@ -10,7 +10,7 @@ public sealed class TaiKhoanController(
     LibraryFileStore store,
     LibraryAccountService accounts) : Controller
 {
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
         var viewModels = await store.ReadAsync(data => data.Accounts
             .OrderBy(account => account.Username)
@@ -28,7 +28,7 @@ public sealed class TaiKhoanController(
                 };
             })
             .ToList());
-        return View(viewModels);
+        return View(PagedResult<AccountSummaryViewModel>.Create(viewModels, page));
     }
 
     [HttpGet]

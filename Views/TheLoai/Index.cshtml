@@ -1,4 +1,4 @@
-@model IEnumerable<TheLoai>
+@model PagedResult<TheLoai>
 @{
     ViewData["Title"] = "Thể loại";
 }
@@ -7,7 +7,7 @@
     <div>
         <p class="eyebrow">THỂ LOẠI</p>
         <h1>Thể loại</h1>
-        <p class="text-secondary">@Model.Count() thể loại</p>
+        <p class="text-secondary">@Model.TotalCount thể loại</p>
     </div>
     @if (User.IsInRole(LibraryRoles.QuanLy))
     {
@@ -25,22 +25,22 @@
     }
 </form>
 
-@if (!Model.Any())
+@if (Model.TotalCount == 0)
 {
     <div class="empty-state"><p>Chưa có thể loại nào.</p></div>
 }
 else
 {
     <div class="table-responsive">
-        <table class="table align-middle">
+        <table class="table align-middle responsive-data-table">
             <thead><tr><th>Tên thể loại</th><th>Mô tả</th><th class="text-end">Thao tác</th></tr></thead>
             <tbody>
-            @foreach (var category in Model)
+            @foreach (var category in Model.Items)
             {
                 <tr>
-                    <td class="fw-semibold">@category.TenTheLoai</td>
-                    <td class="text-secondary">@(string.IsNullOrWhiteSpace(category.MoTa) ? "—" : category.MoTa)</td>
-                    <td class="text-end text-nowrap">
+                    <td data-label="Tên thể loại" class="fw-semibold">@category.TenTheLoai</td>
+                    <td data-label="Mô tả" class="text-secondary">@(string.IsNullOrWhiteSpace(category.MoTa) ? "—" : category.MoTa)</td>
+                    <td data-label="Thao tác" class="text-end text-nowrap">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@category.Id">Xem</a>
                         @if (User.IsInRole(LibraryRoles.QuanLy))
                         {
@@ -53,4 +53,8 @@ else
             </tbody>
         </table>
     </div>
+}
+@if (Model.TotalPages > 1)
+{
+    <partial name="_Pagination" model="Model.CreatePagination((string?)ViewBag.Search)" />
 }

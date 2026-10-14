@@ -10,9 +10,9 @@ namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
 public sealed class MuonTraController(LibraryFileStore store) : Controller
 {
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
-        var model = await store.ReadAsync(BuildPageModel);
+        var model = await store.ReadAsync(data => BuildPageModel(data, page));
         return View(model);
     }
 
@@ -110,19 +110,19 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
 
     private async Task PopulatePageModelAsync(LibraryLoanPageViewModel model)
     {
-        var data = await store.ReadAsync(BuildPageModel);
+        var data = await store.ReadAsync(source => BuildPageModel(source, 1));
         model.Loans = data.Loans;
         model.Readers = data.Readers;
         model.Books = data.Books;
     }
 
-    private static LibraryLoanPageViewModel BuildPageModel(LibraryData data)
+    private static LibraryLoanPageViewModel BuildPageModel(LibraryData data, int page)
     {
         var readers = data.DocGia.ToDictionary(item => item.Id);
         var staff = data.NhanVien.ToDictionary(item => item.Id);
         var books = data.Sach.ToDictionary(item => item.Id);
         var today = DateTime.UtcNow.Date;
-        var loanSummaries = data.PhieuMuon
+        var loanSummaries = PagedResult<LibraryLoanSummaryViewModel>.Create(data.PhieuMuon
             .OrderByDescending(item => item.NgayMuon)
             .Select(loan =>
             {
@@ -149,7 +149,7 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
                     DueAt = loan.HanTra,
                     Status = status
                 };
-            }).ToList();
+            }), page);
 
         return new LibraryLoanPageViewModel
         {

@@ -1,0 +1,61 @@
+@model PaginationViewModel
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    string PageUrl(int page)
+    {
+        var routeValues = new Dictionary<string, object?> { ["page"] = page };
+        if (!string.IsNullOrWhiteSpace(Model.Search))
+        {
+            routeValues["search"] = Model.Search;
+        }
+
+        if (Model.RouteId.HasValue)
+        {
+            routeValues["id"] = Model.RouteId.Value;
+        }
+
+        return Url.Action(Model.Action, controller, routeValues) ?? "#";
+    }
+}
+
+<nav class="pagination-nav" aria-label="Phân trang">
+    <ul class="pagination justify-content-center flex-wrap mb-0">
+        <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+            @if (Model.PageNumber > 1)
+            {
+                <a class="page-link" href="@PageUrl(Model.PageNumber - 1)" aria-label="Trang trước">‹</a>
+            }
+            else
+            {
+                <span class="page-link" aria-hidden="true">‹</span>
+            }
+        </li>
+        @foreach (var pageNumber in Model.VisiblePages)
+        {
+            <li class="page-item @(pageNumber == Model.PageNumber ? "active" : "") @(pageNumber.HasValue ? "" : "disabled")">
+                @if (pageNumber.HasValue && pageNumber.Value == Model.PageNumber)
+                {
+                    <span class="page-link" aria-current="page">@pageNumber.Value</span>
+                }
+                else if (pageNumber.HasValue)
+                {
+                    <a class="page-link" href="@PageUrl(pageNumber.Value)">@pageNumber.Value</a>
+                }
+                else
+                {
+                    <span class="page-link" aria-hidden="true">…</span>
+                }
+            </li>
+        }
+        <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+            @if (Model.PageNumber < Model.TotalPages)
+            {
+                <a class="page-link" href="@PageUrl(Model.PageNumber + 1)" aria-label="Trang sau">›</a>
+            }
+            else
+            {
+                <span class="page-link" aria-hidden="true">›</span>
+            }
+        </li>
+    </ul>
+</nav>

@@ -1,4 +1,4 @@
-@model IEnumerable<Sach>
+@model PagedResult<Sach>
 @{
     ViewData["Title"] = "Sách";
 }
@@ -7,7 +7,7 @@
     <div>
         <p class="eyebrow">KHO SÁCH</p>
         <h1>Sách</h1>
-        <p class="text-secondary">@Model.Count() đầu sách</p>
+        <p class="text-secondary">@Model.TotalCount đầu sách</p>
     </div>
     @if (User.IsInRole(LibraryRoles.NhanVien) || User.IsInRole(LibraryRoles.QuanLy))
     {
@@ -25,14 +25,14 @@
     }
 </form>
 
-@if (!Model.Any())
+@if (Model.TotalCount == 0)
 {
     <div class="empty-state"><p>Không tìm thấy sách phù hợp.</p></div>
 }
 else
 {
     <div class="table-responsive">
-        <table class="table align-middle">
+        <table class="table align-middle responsive-data-table">
             <thead>
                 <tr>
                     <th>Mã sách</th>
@@ -45,16 +45,16 @@ else
                 </tr>
             </thead>
             <tbody>
-            @foreach (var book in Model)
+            @foreach (var book in Model.Items)
             {
                 <tr>
-                    <td>@book.Id</td>
-                    <td class="fw-semibold">@book.TenSach</td>
-                    <td>@book.TacGia</td>
-                    <td>@(book.NhaXuatBan ?? "—")</td>
-                    <td>@(book.NamXuatBan?.ToString() ?? "—")</td>
-                    <td class="text-end">@book.SoLuong</td>
-                    <td class="text-end text-nowrap">
+                    <td data-label="Mã sách">@book.Id</td>
+                    <td data-label="Tên sách" class="fw-semibold">@book.TenSach</td>
+                    <td data-label="Tác giả">@book.TacGia</td>
+                    <td data-label="Nhà xuất bản">@(book.NhaXuatBan ?? "—")</td>
+                    <td data-label="Năm xuất bản">@(book.NamXuatBan?.ToString() ?? "—")</td>
+                    <td data-label="Số lượng" class="text-end">@book.SoLuong</td>
+                    <td data-label="Thao tác" class="text-end text-nowrap">
                         @if (User.IsInRole(LibraryRoles.NhanVien) || User.IsInRole(LibraryRoles.QuanLy))
                         {
                             <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@book.Id">Sửa</a>
@@ -67,4 +67,8 @@ else
             </tbody>
         </table>
     </div>
+}
+@if (Model.TotalPages > 1)
+{
+    <partial name="_Pagination" model="Model.CreatePagination((string?)ViewBag.Search)" />
 }

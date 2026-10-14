@@ -1,4 +1,4 @@
-@model IEnumerable<AccountSummaryViewModel>
+@model PagedResult<AccountSummaryViewModel>
 @{
     ViewData["Title"] = "Quản lý nhân viên";
 }
@@ -7,23 +7,23 @@
     <div>
         <p class="eyebrow">QUẢN LÝ / NHÂN SỰ</p>
         <h1>Quản lý nhân viên</h1>
-        <p class="text-secondary">Danh sách các tài khoản nhân viên và quản lý được cấp quyền truy cập.</p>
+        <p class="text-secondary">Danh sách các tài khoản nhân viên và quản lý được cấp quyền truy cập · @Model.TotalCount tài khoản</p>
     </div>
 </div>
 
 <div class="table-responsive">
-    <table class="table align-middle">
+    <table class="table align-middle responsive-data-table">
         <thead><tr><th>Tên tài khoản</th><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Vai trò</th><th></th></tr></thead>
         <tbody>
-        @foreach (var account in Model)
+        @foreach (var account in Model.Items)
         {
             <tr>
-                <td class="fw-semibold">@account.Username</td>
-                <td class="fw-semibold">@account.HoTen</td>
-                <td>@account.Email</td>
-                <td>@(account.SoDienThoai ?? "—")</td>
-                <td>@account.Role</td>
-                <td class="text-end">
+                <td data-label="Tên tài khoản" class="fw-semibold">@account.Username</td>
+                <td data-label="Họ tên" class="fw-semibold">@account.HoTen</td>
+                <td data-label="Email">@account.Email</td>
+                <td data-label="Điện thoại">@(account.SoDienThoai ?? "—")</td>
+                <td data-label="Vai trò">@account.Role</td>
+                <td data-label="Thao tác" class="text-end">
                     <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@account.Id">Sửa hồ sơ</a>
                 </td>
             </tr>
@@ -31,3 +31,7 @@
         </tbody>
     </table>
 </div>
+@if (Model.TotalPages > 1)
+{
+    <partial name="_Pagination" model="Model.CreatePagination()" />
+}

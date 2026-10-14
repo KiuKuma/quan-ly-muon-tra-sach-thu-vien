@@ -7,7 +7,7 @@
     <div>
         <p class="eyebrow">NGHIỆP VỤ THƯ VIỆN</p>
         <h1>Quản lý mượn trả sách</h1>
-        <p class="text-secondary">@Model.Loans.Count phiếu mượn</p>
+        <p class="text-secondary">@Model.Loans.TotalCount phiếu mượn</p>
     </div>
 </div>
 
@@ -51,29 +51,29 @@
     </form>
 </section>
 
-@if (Model.Loans.Count == 0)
+@if (Model.Loans.TotalCount == 0)
 {
     <div class="empty-state"><p>Chưa có phiếu mượn nào.</p></div>
 }
 else
 {
     <div class="table-responsive">
-        <table class="table align-middle">
+        <table class="table align-middle responsive-data-table">
             <thead>
                 <tr><th>Mã phiếu</th><th>Độc giả</th><th>Sách</th><th>Tài khoản nhân viên</th><th>Ngày mượn</th><th>Hạn trả</th><th>Trạng thái</th><th></th></tr>
             </thead>
             <tbody>
-            @foreach (var loan in Model.Loans)
+            @foreach (var loan in Model.Loans.Items)
             {
                 <tr>
-                    <td>@loan.Id</td>
-                    <td>@loan.ReaderName</td>
-                    <td>@loan.Books</td>
-                    <td>@loan.StaffUsername</td>
-                    <td>@loan.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                    <td>@loan.DueAt.ToString("dd/MM/yyyy")</td>
-                    <td>@loan.Status</td>
-                    <td class="text-end">
+                    <td data-label="Mã phiếu">@loan.Id</td>
+                    <td data-label="Độc giả">@loan.ReaderName</td>
+                    <td data-label="Sách">@loan.Books</td>
+                    <td data-label="Tài khoản nhân viên">@loan.StaffUsername</td>
+                    <td data-label="Ngày mượn">@loan.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    <td data-label="Hạn trả">@loan.DueAt.ToString("dd/MM/yyyy")</td>
+                    <td data-label="Trạng thái">@loan.Status</td>
+                    <td data-label="Thao tác" class="text-end">
                         @if (loan.Status != "Đã trả")
                         {
                             <form asp-action="Return" method="post">
@@ -87,6 +87,10 @@ else
             </tbody>
         </table>
     </div>
+}
+@if (Model.Loans.TotalPages > 1)
+{
+    <partial name="_Pagination" model="Model.Loans.CreatePagination()" />
 }
 
 @section Scripts {

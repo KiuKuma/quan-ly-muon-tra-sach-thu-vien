@@ -4,7 +4,8 @@ namespace quan_ly_muon_tra_sach_thu_vien.Models.ViewModels;
 
 public sealed class LibraryLoanPageViewModel
 {
-    public List<LibraryLoanSummaryViewModel> Loans { get; set; } = [];
+    public PagedResult<LibraryLoanSummaryViewModel> Loans { get; set; } =
+        PagedResult<LibraryLoanSummaryViewModel>.Create([], 1);
     public List<ReaderOptionViewModel> Readers { get; set; } = [];
     public List<BookOptionViewModel> Books { get; set; } = [];
     public CreateLibraryLoanViewModel NewLoan { get; set; } = new();

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using quan_ly_muon_tra_sach_thu_vien.Data;
 using quan_ly_muon_tra_sach_thu_vien.Models;
+using quan_ly_muon_tra_sach_thu_vien.Models.ViewModels;
 
 namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
@@ -9,7 +10,7 @@ namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 public sealed class DocGiaController(
     LibraryFileStore store) : Controller
 {
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         ViewBag.Search = search;
         return View(await store.ReadAsync(data =>
@@ -22,7 +23,7 @@ public sealed class DocGiaController(
                                                   reader.Email.Contains(term, StringComparison.OrdinalIgnoreCase));
             }
 
-            return readers.OrderBy(reader => reader.HoTen).ToList();
+            return PagedResult<DocGia>.Create(readers.OrderBy(reader => reader.HoTen), page);
         }));
     }
 

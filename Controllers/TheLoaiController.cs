@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using quan_ly_muon_tra_sach_thu_vien.Data;
 using quan_ly_muon_tra_sach_thu_vien.Models;
+using quan_ly_muon_tra_sach_thu_vien.Models.ViewModels;
 
 namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
 [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
 public sealed class TheLoaiController(LibraryFileStore store) : Controller
 {
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         ViewBag.Search = search;
         return View(await store.ReadAsync(data =>
@@ -22,23 +23,25 @@ public sealed class TheLoaiController(LibraryFileStore store) : Controller
                     (category.MoTa?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
             }
 
-            return categories.OrderBy(category => category.TenTheLoai).ToList();
+            return PagedResult<TheLoai>.Create(categories.OrderBy(category => category.TenTheLoai), page);
         }));
     }
 
-    public async Task<IActionResult> Details(int id)
+    public async Task<IActionResult> Details(int id, int page = 1)
     {
         var category = await store.ReadAsync(data =>
         {
             var item = data.TheLoai.FirstOrDefault(category => category.Id == id);
-            if (item is not null)
-            {
-                item.Sach = data.Sach.Where(book => book.TheLoaiId == id).ToList();
-            }
-
             return item;
         });
-        return category is null ? NotFound() : View(category);
+        if (category is null)
+        {
+            return NotFound();
+        }
+
+        var books = await store.ReadAsync(data => PagedResult<Sach>.Create(
+            data.Sach.Where(book => book.TheLoaiId == id).OrderBy(book => book.TenSach), page));
+        return View(new TheLoaiDetailsViewModel { Category = category, Books = books });
     }
 
     [Authorize(Roles = LibraryRoles.QuanLy)]
