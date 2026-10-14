@@ -6,11 +6,21 @@
 
 <section class="form-panel form-panel-wide">
     <p class="eyebrow">SÁCH</p>
-        <p class="eyebrow">SÁCH</p>
     <h1>@ViewData["Title"]</h1>
     <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post" class="form-grid form-grid-two">
         <input asp-for="Id" type="hidden" />
         <div asp-validation-summary="ModelOnly" class="text-danger form-span-two" role="alert"></div>
+        @if (isEdit)
+        {
+            <div>
+                <label class="form-label" asp-for="Id">Mã sách</label>
+                <input value="@Model.Id" class="form-control" readonly />
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary form-span-two">Mã sách sẽ được tự động cấp khi lưu.</p>
+        }
         <div>
             <label asp-for="TenSach" class="form-label"></label>
             <input asp-for="TenSach" class="form-control" autofocus />
@@ -20,18 +30,6 @@
             <label asp-for="TacGia" class="form-label"></label>
             <input asp-for="TacGia" class="form-control" />
             <span asp-validation-for="TacGia" class="text-danger"></span>
-        </div>
-        <div>
-            <label asp-for="ISBN" class="form-label"></label>
-            <input asp-for="ISBN" class="form-control" />
-            <span asp-validation-for="ISBN" class="text-danger"></span>
-        </div>
-        <div>
-            <label asp-for="TheLoaiId" class="form-label"></label>
-            <select asp-for="TheLoaiId" asp-items="ViewBag.TheLoaiId" class="form-select">
-                <option value="">Chọn thể loại</option>
-            </select>
-            <span asp-validation-for="TheLoaiId" class="text-danger"></span>
         </div>
         <div>
             <label asp-for="NhaXuatBan" class="form-label"></label>

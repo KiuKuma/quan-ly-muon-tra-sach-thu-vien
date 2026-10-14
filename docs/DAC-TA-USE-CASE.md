@@ -96,14 +96,14 @@ Thủ thư chỉ **xem** ở UC04, UC05, UC06; Quản trị viên mới được
 
 | Mục | Nội dung |
 |---|---|
-| Tác nhân | Quản trị viên (thêm, sửa, xóa); Thủ thư (xem, tìm) |
+| Tác nhân | Nhân viên và Quản lý (thêm, sửa, xóa, xem, tìm) |
 | Mô tả | Quản lý danh mục đầu sách và số lượng trong kho |
 | Tiền điều kiện | Đã đăng nhập. Muốn thêm hoặc sửa phải có ít nhất một thể loại |
 | Hậu điều kiện | Dữ liệu sách trong `books.txt` được cập nhật |
-| Luồng chính (thêm) | 1. Quản trị viên chọn Thêm sách. 2. Nhập tên sách, tác giả, ISBN, nhà xuất bản, năm xuất bản, số lượng, chọn thể loại. 3. Hệ thống kiểm tra hợp lệ. 4. Hệ thống lưu sách và hiển thị thông báo thành công |
+| Luồng chính (thêm) | 1. Nhân viên hoặc Quản lý chọn Thêm sách. 2. Nhập tên sách, tác giả, nhà xuất bản, năm xuất bản, số lượng. 3. Hệ thống tự cấp mã sách, kiểm tra hợp lệ và lưu sách. 4. Hiển thị thông báo thành công |
 | Luồng chính (sửa, xóa, xem) | Sửa: chọn sách, chỉnh các trường rồi lưu. Xóa: chọn sách, xác nhận ở trang xác nhận. Xem: mở chi tiết sách kèm tên thể loại |
-| Luồng thay thế | 3a. Thiếu tên hoặc tác giả, thể loại không hợp lệ: báo lỗi tại trường. 3b. ISBN trùng sách khác: báo "ISBN này đã được sử dụng". 4a. Xóa sách đã có trong phiếu mượn: không xóa, báo lỗi |
-| Quy tắc | Tên sách tối đa 200 ký tự, tác giả 120, ISBN 20. Năm xuất bản 1450 đến 2200. Số lượng 0 đến 100000 |
+| Luồng thay thế | 3a. Thiếu tên hoặc tác giả: báo lỗi tại trường. 4a. Xóa sách đã có trong phiếu mượn: không xóa, báo lỗi |
+| Quy tắc | Tên sách tối đa 200 ký tự, tác giả 120. Năm xuất bản 1450 đến 2200. Số lượng 0 đến 100000 |
 
 ### UC05. Quản lý thể loại
 
@@ -184,7 +184,7 @@ Thủ thư chỉ **xem** ở UC04, UC05, UC06; Quản trị viên mới được
 | Mô tả | Tìm sách trong danh mục |
 | Luồng chính | 1. Nhập từ khóa. 2. Hệ thống lọc sách theo tên hoặc tác giả, không phân biệt hoa thường. 3. Hiển thị danh sách sắp xếp theo tên sách |
 | Luồng thay thế | Không có kết quả: hiển thị "Không tìm thấy sách phù hợp" |
-| Mở rộng (Sprint 3) | Lọc thêm theo thể loại, ISBN, năm xuất bản; tìm không phân biệt dấu tiếng Việt |
+| Mở rộng (Sprint 3) | Lọc thêm theo thể loại, năm xuất bản; tìm không phân biệt dấu tiếng Việt |
 
 ### UC14. Xem báo cáo thống kê
 
@@ -201,7 +201,7 @@ Thủ thư chỉ **xem** ở UC04, UC05, UC06; Quản trị viên mới được
 |---|---|
 | BR-01 | Số lượng sách trong kho không âm; mượn làm giảm, trả làm tăng đúng số lượng trên phiếu |
 | BR-02 | Không xóa sách, độc giả đã có phiếu mượn; không xóa thể loại còn sách |
-| BR-03 | Email độc giả, ISBN sách, tên thể loại không được trùng |
+| BR-03 | Email độc giả, tên thể loại không được trùng |
 | BR-04 | Hạn trả không được trước ngày lập phiếu |
 | BR-05 | Phiếu quá hạn là phiếu chưa trả mà hạn trả đã qua |
 | BR-06 | Chỉ Quản trị viên được thêm, sửa, xóa danh mục; Thủ thư chỉ xem |

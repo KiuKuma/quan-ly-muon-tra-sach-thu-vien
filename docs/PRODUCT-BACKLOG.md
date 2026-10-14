@@ -62,7 +62,7 @@
 | ID | User Story | Ưu tiên | SP | Sprint | Phụ trách | Trạng thái |
 |---|---|---|---|---|---|---|
 | PB-24 | Là Thủ thư, tôi muốn tìm sách theo tên hoặc tác giả, tìm độc giả theo tên hoặc email | M | 3 | 1 | QD | Xong |
-| PB-25 | Là Độc giả, tôi muốn tra cứu sách theo nhiều tiêu chí (tên, tác giả, thể loại, ISBN, năm) để tìm đúng cuốn cần | M | 5 | 3 | QD | Chưa |
+| PB-25 | Là Độc giả, tôi muốn tra cứu sách theo nhiều tiêu chí (tên, tác giả, thể loại, năm) để tìm đúng cuốn cần | M | 5 | 3 | QD | Chưa |
 | PB-26 | Là Thủ thư, tôi muốn tìm kiếm không phân biệt dấu tiếng Việt để gõ nhanh hơn | C | 2 | 3 | QD | Chưa |
 | PB-27 | Là Quản trị viên, tôi muốn xem tổng quan: số đầu sách, số bản còn, thể loại, độc giả, phiếu đang mượn, quá hạn | M | 3 | 1 | PA | Xong |
 | PB-28 | Là Quản trị viên, tôi muốn thống kê lượt mượn theo sách và theo thời gian | S | 5 | 3 | QD | Chưa |

@@ -28,11 +28,11 @@ Mọi lần ghi đều đi qua `LibraryFileStore.UpdateAsync`: có khóa `Semaph
 | `readers.txt` | `Id`, `HoTen`, `Email`, `SoDienThoai`, `DiaChi`, `NgayDangKy`, `IdentityUserId` | PK `Id`; `Email` duy nhất; FK `IdentityUserId` → `users` (có thể rỗng) |
 | `staff.txt` | `Id`, `HoTen`, `Email`, `SoDienThoai`, `IdentityUserId` | PK `Id`; FK `IdentityUserId` → `users` |
 | `categories.txt` | `Id`, `TenTheLoai`, `MoTa` | PK `Id`; `TenTheLoai` duy nhất |
-| `books.txt` | `Id`, `TenSach`, `TacGia`, `ISBN`, `NhaXuatBan`, `NamXuatBan`, `SoLuong`, `TheLoaiId` | PK `Id`; `ISBN` duy nhất (nếu có); FK `TheLoaiId` → `categories` |
+| `books.txt` | `Id`, `TenSach`, `TacGia`, `NhaXuatBan`, `NamXuatBan`, `SoLuong`, `TheLoaiId` | PK `Id`; FK `TheLoaiId` → `categories` (có thể rỗng với sách tạo mới qua biểu mẫu quản lý) |
 | `loans.txt` | `Id`, `DocGiaId`, `NhanVienId`, `TenTaiKhoanNhanVien`, `NgayMuon`, `HanTra`, `TrangThai` | PK `Id`; FK → `readers`, `staff` |
 | `loan-details.txt` | `Id`, `PhieuMuonId`, `SachId`, `SoLuong` | PK `Id`; FK → `loans`, `books` |
 
-Mã (`Id`) kiểu số được cấp bằng `Max(Id) + 1` trong cùng lần ghi nên không bị trùng.
+Mã sách (`Id`) kiểu số được cấp tự động bằng `Max(Id) + 1` trong cùng lần ghi; người dùng không nhập mã. Sách mới qua biểu mẫu quản lý nhập tên sách, tác giả, nhà xuất bản, năm xuất bản và số lượng. Khi sửa, thể loại hiện có được giữ nguyên.
 
 ## 3. Ràng buộc toàn vẹn và nơi đang kiểm tra
 
@@ -40,8 +40,6 @@ Tệp text không tự kiểm tra khóa ngoại hay tính duy nhất, nên các 
 
 | Quy tắc | Nơi kiểm tra |
 |---|---|
-| `Sach.ISBN` không trùng (khi có nhập) | `SachController` (Create, Edit) |
-| `Sach.TheLoaiId` phải là thể loại có thật | `SachController` |
 | `DocGia.Email` không trùng với độc giả khác và hồ sơ tài khoản | `DocGiaController` |
 | `TheLoai.TenTheLoai` không trùng (không phân biệt hoa thường) | `TheLoaiController` |
 | Không xóa Sách đã có trong phiếu mượn | `SachController.DeleteConfirmed` |
@@ -65,7 +63,7 @@ Hai chức năng này đã có trong `develop` (`SachController`, `DocGiaControl
 
 Ràng buộc đang được controller kiểm tra:
 
-- Thêm và sửa Sách: bắt buộc tên sách, tác giả, thể loại hợp lệ; ISBN không trùng; năm xuất bản 1450 đến 2200; số lượng 0 đến 100000.
+- Thêm và sửa Sách: bắt buộc tên sách, tác giả; năm xuất bản 1450 đến 2200; số lượng 0 đến 100000. Mã sách được tự cấp. Khi sửa, thể loại hiện tại được giữ nguyên.
 - Thêm và sửa Độc giả: bắt buộc họ tên, email hợp lệ và không trùng (kể cả với hồ sơ tài khoản). Khi sửa độc giả có tài khoản liên kết thì hồ sơ được cập nhật theo.
 - Xóa Sách đã có trong phiếu mượn: bị chặn. Xóa Độc giả đã có phiếu mượn: bị chặn.
 - Mọi thao tác POST đều có `[ValidateAntiForgeryToken]`.
@@ -78,5 +76,5 @@ Ràng buộc đang được controller kiểm tra:
 
 ## 6. Việc để sprint sau
 
-- Tìm kiếm đa tiêu chí (ISBN, thể loại, năm xuất bản): Sprint 3.
+- Tìm kiếm đa tiêu chí (thể loại, năm xuất bản): Sprint 3.
 - Tách `TacGia`, gộp `NguoiDung`, thêm `PhieuTra`: theo [ERD.md](ERD.md), chỉ làm khi cả nhóm thống nhất.

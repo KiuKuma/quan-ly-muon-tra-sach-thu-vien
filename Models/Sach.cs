@@ -15,10 +15,6 @@ public sealed class Sach
     [Display(Name = "Tác giả")]
     public string TacGia { get; set; } = string.Empty;
 
-    [StringLength(20)]
-    [Display(Name = "ISBN")]
-    public string? ISBN { get; set; }
-
     [StringLength(160)]
     [Display(Name = "Nhà xuất bản")]
     public string? NhaXuatBan { get; set; }
@@ -32,7 +28,7 @@ public sealed class Sach
     public int SoLuong { get; set; }
 
     [Display(Name = "Thể loại")]
-    public int TheLoaiId { get; set; }
+    public int? TheLoaiId { get; set; }
     [JsonIgnore]
     public TheLoai? TheLoai { get; set; }
 

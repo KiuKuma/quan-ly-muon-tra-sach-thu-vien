@@ -26,7 +26,7 @@ erDiagram
     TaiKhoan ||--o| HoSo : "AccountId"
     TaiKhoan |o--o| DocGia : "IdentityUserId"
     TaiKhoan |o--o| NhanVien : "IdentityUserId"
-    TheLoai ||--o{ Sach : "TheLoaiId"
+    TheLoai |o--o{ Sach : "TheLoaiId (có thể rỗng)"
     DocGia ||--o{ PhieuMuon : "DocGiaId"
     NhanVien ||--o{ PhieuMuon : "NhanVienId"
     PhieuMuon ||--|{ ChiTietPhieuMuon : "PhieuMuonId"
@@ -72,7 +72,6 @@ erDiagram
         int Id PK
         string TenSach
         string TacGia
-        string ISBN
         string NhaXuatBan
         int NamXuatBan
         int SoLuong
@@ -167,7 +166,6 @@ erDiagram
     Sach {
         int Id PK
         string TenSach
-        string ISBN UK
         string NhaXuatBan
         int NamXuatBan
         int SoLuong
@@ -224,7 +222,7 @@ erDiagram
 
 ### Ràng buộc nghiệp vụ
 
-- Duy nhất (không phân biệt hoa thường): `TaiKhoan.Username`, `NguoiDung.Email`, `Sach.ISBN` (khi có), `TheLoai.TenTheLoai`.
+- Duy nhất (không phân biệt hoa thường): `TaiKhoan.Username`, `NguoiDung.Email`, `TheLoai.TenTheLoai`.
 - `Sach.SoLuong >= 0`; `Sach.NamXuatBan` trong khoảng 1450 đến 2200 (khớp `[Range]` hiện tại).
 - `PhieuMuon.HanTra >= NgayMuon`; `ChiTietPhieuMuon.SoLuong > 0`.
 - `ChiTietPhieuTra.SoLuongTra` không vượt số lượng mượn chưa trả của dòng tương ứng.

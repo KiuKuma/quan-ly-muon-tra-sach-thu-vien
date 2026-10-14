@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using quan_ly_muon_tra_sach_thu_vien.Data;
 using quan_ly_muon_tra_sach_thu_vien.Models;
 
@@ -26,8 +25,11 @@ public sealed class SachController(LibraryFileStore store) : Controller
             var results = books.OrderBy(book => book.TenSach).ToList();
             foreach (var book in results)
             {
-                categories.TryGetValue(book.TheLoaiId, out var category);
-                book.TheLoai = category;
+                if (book.TheLoaiId is int categoryId)
+                {
+                    categories.TryGetValue(categoryId, out var category);
+                    book.TheLoai = category;
+                }
             }
 
             return results;
@@ -49,51 +51,33 @@ public sealed class SachController(LibraryFileStore store) : Controller
         return book is null ? NotFound() : View(book);
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
-    public async Task<IActionResult> Create()
-    {
-        await PopulateCategoriesAsync();
-        return View("Form", new Sach());
-    }
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
+    public IActionResult Create() => View("Form", new Sach());
 
     [HttpPost]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("TenSach,TacGia,ISBN,NhaXuatBan,NamXuatBan,SoLuong,TheLoaiId")] Sach book)
+    public async Task<IActionResult> Create([Bind("TenSach,TacGia,NhaXuatBan,NamXuatBan,SoLuong")] Sach book)
     {
-        await ValidateBookAsync(book);
         if (!ModelState.IsValid)
         {
-            await PopulateCategoriesAsync(book.TheLoaiId);
             return View("Form", book);
         }
 
-        var added = await store.UpdateAsync(data =>
+        await store.UpdateAsync(data =>
         {
-            if (!data.TheLoai.Any(category => category.Id == book.TheLoaiId) ||
-                (!string.IsNullOrWhiteSpace(book.ISBN) && data.Sach.Any(item => item.ISBN == book.ISBN.Trim())))
-            {
-                return false;
-            }
-
             book.Id = data.Sach.Select(item => item.Id).DefaultIfEmpty(0).Max() + 1;
-            book.ISBN = book.ISBN?.Trim();
-            book.TheLoai = null;
+            book.TenSach = book.TenSach.Trim();
+            book.TacGia = book.TacGia.Trim();
+            book.NhaXuatBan = book.NhaXuatBan?.Trim();
             data.Sach.Add(book);
-            return true;
+            return book.Id;
         });
-        if (!added)
-        {
-            await ValidateBookAsync(book);
-            ModelState.AddModelError(string.Empty, "Dữ liệu danh mục vừa thay đổi. Vui lòng kiểm tra lại.");
-            await PopulateCategoriesAsync(book.TheLoaiId);
-            return View("Form", book);
-        }
         TempData["Success"] = "Đã thêm sách.";
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     public async Task<IActionResult> Edit(int id)
     {
         var book = await store.ReadAsync(data => data.Sach.FirstOrDefault(item => item.Id == id));
@@ -102,58 +86,49 @@ public sealed class SachController(LibraryFileStore store) : Controller
             return NotFound();
         }
 
-        await PopulateCategoriesAsync(book.TheLoaiId);
         return View("Form", book);
     }
 
     [HttpPost]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,TenSach,TacGia,ISBN,NhaXuatBan,NamXuatBan,SoLuong,TheLoaiId")] Sach book)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,TenSach,TacGia,NhaXuatBan,NamXuatBan,SoLuong")] Sach book)
     {
         if (id != book.Id)
         {
             return NotFound();
         }
 
-        await ValidateBookAsync(book, id);
         if (!ModelState.IsValid)
         {
-            await PopulateCategoriesAsync(book.TheLoaiId);
             return View("Form", book);
         }
 
         var updated = await store.UpdateAsync(data =>
         {
             var existing = data.Sach.FirstOrDefault(item => item.Id == id);
-            if (existing is null || !data.TheLoai.Any(category => category.Id == book.TheLoaiId) ||
-                (!string.IsNullOrWhiteSpace(book.ISBN) && data.Sach.Any(item =>
-                    item.Id != id && item.ISBN == book.ISBN.Trim())))
+            if (existing is null)
             {
                 return false;
             }
 
             existing.TenSach = book.TenSach.Trim();
             existing.TacGia = book.TacGia.Trim();
-            existing.ISBN = book.ISBN?.Trim();
             existing.NhaXuatBan = book.NhaXuatBan?.Trim();
             existing.NamXuatBan = book.NamXuatBan;
             existing.SoLuong = book.SoLuong;
-            existing.TheLoaiId = book.TheLoaiId;
             return true;
         });
         if (!updated)
         {
-            await ValidateBookAsync(book, id);
-            ModelState.AddModelError(string.Empty, "Không tìm thấy sách, thể loại hoặc ISBN không hợp lệ.");
-            await PopulateCategoriesAsync(book.TheLoaiId);
+            ModelState.AddModelError(string.Empty, "Không tìm thấy sách để cập nhật.");
             return View("Form", book);
         }
         TempData["Success"] = "Đã cập nhật sách.";
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     public async Task<IActionResult> Delete(int id)
     {
         var book = await store.ReadAsync(data =>
@@ -170,7 +145,7 @@ public sealed class SachController(LibraryFileStore store) : Controller
     }
 
     [HttpPost, ActionName("Delete")]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
@@ -196,30 +171,5 @@ public sealed class SachController(LibraryFileStore store) : Controller
         }
         TempData["Success"] = "Đã xóa sách.";
         return RedirectToAction(nameof(Index));
-    }
-
-    private async Task ValidateBookAsync(Sach book, int? currentId = null)
-    {
-        var issues = await store.ReadAsync(data => (
-            CategoryExists: data.TheLoai.Any(category => category.Id == book.TheLoaiId),
-            IsbnExists: !string.IsNullOrWhiteSpace(book.ISBN) && data.Sach.Any(item =>
-                item.Id != currentId && item.ISBN == book.ISBN.Trim())));
-        if (!issues.CategoryExists)
-        {
-            ModelState.AddModelError(nameof(book.TheLoaiId), "Vui lòng chọn thể loại hợp lệ.");
-        }
-
-        if (issues.IsbnExists)
-        {
-            ModelState.AddModelError(nameof(book.ISBN), "ISBN này đã được sử dụng.");
-        }
-    }
-
-    private async Task PopulateCategoriesAsync(int? selectedId = null)
-    {
-        var categories = await store.ReadAsync(data =>
-            data.TheLoai.OrderBy(category => category.TenTheLoai).ToList());
-        ViewBag.TheLoaiId = new SelectList(categories,
-            nameof(TheLoai.Id), nameof(TheLoai.TenTheLoai), selectedId);
     }
 }

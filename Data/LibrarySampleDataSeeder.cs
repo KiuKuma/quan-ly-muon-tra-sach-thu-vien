@@ -15,14 +15,14 @@ public sealed class LibrarySampleDataSeeder(LibraryFileStore store)
 
     private static readonly SampleBook[] SampleBooks =
     [
-        new("9780132350884", "Clean Code: A Handbook of Agile Software Craftsmanship", "Robert C. Martin", "Prentice Hall", 2008, "Lập trình", 5),
-        new("9780135957059", "The Pragmatic Programmer: 20th Anniversary Edition", "David Thomas, Andrew Hunt", "Addison-Wesley Professional", 2019, "Lập trình", 4),
-        new("9781491910771", "Head First Java: A Brain-Friendly Guide", "Kathy Sierra, Bert Bates, Trisha Gee", "O'Reilly Media", 2022, "Lập trình", 3),
-        new("9780321965516", "Don't Make Me Think, Revisited", "Steve Krug", "New Riders", 2014, "Công nghệ", 4),
-        new("9780321125217", "Domain-Driven Design: Tackling Complexity in the Heart of Software", "Eric Evans", "Addison-Wesley Professional", 2003, "Công nghệ", 2),
-        new("9780735211292", "Atomic Habits", "James Clear", "Avery", 2018, "Kỹ năng", 6),
-        new("9780061120084", "To Kill a Mockingbird", "Harper Lee", "Harper Perennial Modern Classics", 2006, "Văn học", 3),
-        new("9780747532699", "Harry Potter and the Philosopher's Stone", "J. K. Rowling", "Bloomsbury", 1997, "Thiếu nhi", 4)
+        new("Clean Code: A Handbook of Agile Software Craftsmanship", "Robert C. Martin", "Prentice Hall", 2008, "Lập trình", 5),
+        new("The Pragmatic Programmer: 20th Anniversary Edition", "David Thomas, Andrew Hunt", "Addison-Wesley Professional", 2019, "Lập trình", 4),
+        new("Head First Java: A Brain-Friendly Guide", "Kathy Sierra, Bert Bates, Trisha Gee", "O'Reilly Media", 2022, "Lập trình", 3),
+        new("Don't Make Me Think, Revisited", "Steve Krug", "New Riders", 2014, "Công nghệ", 4),
+        new("Domain-Driven Design: Tackling Complexity in the Heart of Software", "Eric Evans", "Addison-Wesley Professional", 2003, "Công nghệ", 2),
+        new("Atomic Habits", "James Clear", "Avery", 2018, "Kỹ năng", 6),
+        new("To Kill a Mockingbird", "Harper Lee", "Harper Perennial Modern Classics", 2006, "Văn học", 3),
+        new("Harry Potter and the Philosopher's Stone", "J. K. Rowling", "Bloomsbury", 1997, "Thiếu nhi", 4)
     ];
 
     private static readonly SampleReader[] SampleReaders =
@@ -56,7 +56,7 @@ public sealed class LibrarySampleDataSeeder(LibraryFileStore store)
                 category => category.Id, StringComparer.OrdinalIgnoreCase);
             foreach (var sample in SampleBooks)
             {
-                if (data.Sach.Any(book => book.ISBN == sample.Isbn))
+                if (data.Sach.Any(book => book.TenSach.Equals(sample.Title, StringComparison.OrdinalIgnoreCase)))
                 {
                     continue;
                 }
@@ -66,7 +66,6 @@ public sealed class LibrarySampleDataSeeder(LibraryFileStore store)
                     Id = NextId(data.Sach.Select(book => book.Id)),
                     TenSach = sample.Title,
                     TacGia = sample.Author,
-                    ISBN = sample.Isbn,
                     NhaXuatBan = sample.Publisher,
                     NamXuatBan = sample.Year,
                     SoLuong = sample.Copies,
@@ -194,7 +193,6 @@ public sealed class LibrarySampleDataSeeder(LibraryFileStore store)
     private static int NextId(IEnumerable<int> ids) => ids.DefaultIfEmpty(0).Max() + 1;
 
     private sealed record SampleBook(
-        string Isbn,
         string Title,
         string Author,
         string Publisher,
