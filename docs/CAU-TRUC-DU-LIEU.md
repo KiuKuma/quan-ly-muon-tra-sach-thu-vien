@@ -1,7 +1,7 @@
 # Cấu trúc dữ liệu tệp và quản lý Sách, Độc giả – Sprint 1
 
 **Người thực hiện:** Đặng Huy Quang Dũng  
-**Cơ sở:** nhánh `develop`, commit `1530ba4`. Mô hình dữ liệu xem [ERD.md](ERD.md).
+**Cơ sở:** nhánh `develop`, commit `dcc0e3d`, kèm các sửa của nhánh `feature/sprint1-ra-soat-quang-dung`. Mô hình dữ liệu xem [ERD.md](ERD.md).
 
 Dự án lưu dữ liệu bằng tệp text JSON Lines (mỗi dòng là một bản ghi JSON) trong thư mục `database` (cấu hình `LibraryData:DirectoryPath` trong `appsettings.json`), không dùng SQL. Vì vậy "tạo cơ sở dữ liệu" gồm: danh sách tệp, cấu trúc từng bản ghi, ràng buộc, và bộ khởi tạo.
 
@@ -28,11 +28,11 @@ Mọi lần ghi đều đi qua `LibraryFileStore.UpdateAsync`: có khóa `Semaph
 | `readers.txt` | `Id`, `HoTen`, `Email`, `SoDienThoai`, `DiaChi`, `NgayDangKy`, `IdentityUserId` | PK `Id`; `Email` duy nhất; FK `IdentityUserId` → `users` (có thể rỗng) |
 | `staff.txt` | `Id`, `HoTen`, `Email`, `SoDienThoai`, `IdentityUserId` | PK `Id`; FK `IdentityUserId` → `users` |
 | `categories.txt` | `Id`, `TenTheLoai`, `MoTa` | PK `Id`; `TenTheLoai` duy nhất |
-| `books.txt` | `Id`, `TenSach`, `TacGia`, `NhaXuatBan`, `NamXuatBan`, `SoLuong`, `TheLoaiId` | PK `Id`; FK `TheLoaiId` → `categories` (có thể rỗng với sách tạo mới qua biểu mẫu quản lý) |
+| `books.txt` | `Id`, `TenSach`, `TacGia`, `NhaXuatBan`, `NamXuatBan`, `SoLuong`, `TheLoaiId` | PK `Id`; FK `TheLoaiId` → `categories` (có thể rỗng: sách chưa phân loại) |
 | `loans.txt` | `Id`, `DocGiaId`, `NhanVienId`, `TenTaiKhoanNhanVien`, `NgayMuon`, `HanTra`, `TrangThai` | PK `Id`; FK → `readers`, `staff` |
 | `loan-details.txt` | `Id`, `PhieuMuonId`, `SachId`, `SoLuong` | PK `Id`; FK → `loans`, `books` |
 
-Mã sách (`Id`) kiểu số được cấp tự động bằng `Max(Id) + 1` trong cùng lần ghi; người dùng không nhập mã. Sách mới qua biểu mẫu quản lý nhập tên sách, tác giả, nhà xuất bản, năm xuất bản và số lượng. Khi sửa, thể loại hiện có được giữ nguyên.
+Mã sách (`Id`) kiểu số được cấp tự động bằng `Max(Id) + 1` trong cùng lần ghi; người dùng không nhập mã. Biểu mẫu thêm và sửa sách nhập tên sách, tác giả, thể loại (chọn từ danh sách, không bắt buộc), nhà xuất bản, năm xuất bản và số lượng.
 
 ## 3. Ràng buộc toàn vẹn và nơi đang kiểm tra
 
@@ -42,6 +42,8 @@ Tệp text không tự kiểm tra khóa ngoại hay tính duy nhất, nên các 
 |---|---|
 | `DocGia.Email` không trùng với độc giả khác và hồ sơ tài khoản | `DocGiaController` |
 | `TheLoai.TenTheLoai` không trùng (không phân biệt hoa thường) | `TheLoaiController` |
+| `Sach.TheLoaiId` (nếu có) phải là thể loại có thật | `SachController` (Create, Edit) |
+| `Sach.NamXuatBan` không lớn hơn năm hiện tại | `SachController` (Create, Edit) |
 | Không xóa Sách đã có trong phiếu mượn | `SachController.DeleteConfirmed` |
 | Không xóa Độc giả đã có phiếu mượn | `DocGiaController.DeleteConfirmed` |
 | Không xóa Thể loại còn sách | `TheLoaiController.DeleteConfirmed` |
@@ -51,7 +53,7 @@ Các quy tắc chưa có nơi kiểm tra (để ngỏ cho các sprint sau): `Sac
 
 ## 4. Quản lý Sách và Độc giả
 
-Hai chức năng này đã có trong `develop` (`SachController`, `DocGiaController`, các view tương ứng). Bảng dưới là tài liệu hóa theo đúng hành vi của code.
+Hai chức năng này đã có trong `develop` (`SachController`, `DocGiaController`, các view tương ứng). Thêm, sửa, xóa chỉ dành cho Quản lý; Nhân viên chỉ xem và tìm (khớp `README.md`). Bảng dưới là tài liệu hóa theo đúng hành vi của code.
 
 | Đường dẫn | Chức năng | Vai trò được dùng |
 |---|---|---|
@@ -63,7 +65,7 @@ Hai chức năng này đã có trong `develop` (`SachController`, `DocGiaControl
 
 Ràng buộc đang được controller kiểm tra:
 
-- Thêm và sửa Sách: bắt buộc tên sách, tác giả; năm xuất bản 1450 đến 2200; số lượng 0 đến 100000. Mã sách được tự cấp. Khi sửa, thể loại hiện tại được giữ nguyên.
+- Thêm và sửa Sách: bắt buộc tên sách, tác giả; thể loại không bắt buộc nhưng nếu chọn phải tồn tại; năm xuất bản từ 1450 đến năm hiện tại; số lượng 0 đến 100000. Mã sách được tự cấp. Tên sách, tác giả, nhà xuất bản được cắt khoảng trắng đầu và cuối.
 - Thêm và sửa Độc giả: bắt buộc họ tên, email hợp lệ và không trùng (kể cả với hồ sơ tài khoản). Khi sửa độc giả có tài khoản liên kết thì hồ sơ được cập nhật theo.
 - Xóa Sách đã có trong phiếu mượn: bị chặn. Xóa Độc giả đã có phiếu mượn: bị chặn.
 - Mọi thao tác POST đều có `[ValidateAntiForgeryToken]`.

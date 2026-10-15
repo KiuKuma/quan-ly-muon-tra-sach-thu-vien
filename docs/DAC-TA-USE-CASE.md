@@ -1,7 +1,7 @@
 # Đặc tả Use Case – Quản lý mượn trả sách thư viện
 
 **Người thực hiện:** Đặng Huy Quang Dũng (Product Owner)  
-**Cơ sở:** đề cương (mục 1.1 đến 1.8) và mã nguồn nhánh `develop`, commit `1530ba4`. Liên kết với [PRODUCT-BACKLOG.md](PRODUCT-BACKLOG.md) và [ERD.md](ERD.md).  
+**Cơ sở:** đề cương (mục 1.1 đến 1.8) và mã nguồn nhánh `develop`, commit `dcc0e3d` (kèm các sửa của nhánh `feature/sprint1-ra-soat-quang-dung`). Liên kết với [PRODUCT-BACKLOG.md](PRODUCT-BACKLOG.md) và [ERD.md](ERD.md).  
 **Ghi chú:** use case đánh dấu *Đề xuất* là chức năng đề cương yêu cầu nhưng code chưa có; luồng của chúng là đề xuất để nhóm xác nhận.
 
 ## 1. Tác nhân
@@ -96,14 +96,14 @@ Thủ thư chỉ **xem** ở UC04, UC05, UC06; Quản trị viên mới được
 
 | Mục | Nội dung |
 |---|---|
-| Tác nhân | Nhân viên và Quản lý (thêm, sửa, xóa, xem, tìm) |
+| Tác nhân | Quản trị viên (thêm, sửa, xóa); Thủ thư (xem, tìm) |
 | Mô tả | Quản lý danh mục đầu sách và số lượng trong kho |
-| Tiền điều kiện | Đã đăng nhập. Muốn thêm hoặc sửa phải có ít nhất một thể loại |
+| Tiền điều kiện | Đã đăng nhập. Thể loại không bắt buộc: sách chưa chọn thể loại hiển thị là "Chưa phân loại" |
 | Hậu điều kiện | Dữ liệu sách trong `books.txt` được cập nhật |
-| Luồng chính (thêm) | 1. Nhân viên hoặc Quản lý chọn Thêm sách. 2. Nhập tên sách, tác giả, nhà xuất bản, năm xuất bản, số lượng. 3. Hệ thống tự cấp mã sách, kiểm tra hợp lệ và lưu sách. 4. Hiển thị thông báo thành công |
+| Luồng chính (thêm) | 1. Quản trị viên chọn Thêm sách. 2. Nhập tên sách, tác giả, nhà xuất bản, năm xuất bản, số lượng và chọn thể loại (nếu có). 3. Hệ thống tự cấp mã sách, kiểm tra hợp lệ và lưu sách. 4. Hiển thị thông báo thành công |
 | Luồng chính (sửa, xóa, xem) | Sửa: chọn sách, chỉnh các trường rồi lưu. Xóa: chọn sách, xác nhận ở trang xác nhận. Xem: mở chi tiết sách kèm tên thể loại |
-| Luồng thay thế | 3a. Thiếu tên hoặc tác giả: báo lỗi tại trường. 4a. Xóa sách đã có trong phiếu mượn: không xóa, báo lỗi |
-| Quy tắc | Tên sách tối đa 200 ký tự, tác giả 120. Năm xuất bản 1450 đến 2200. Số lượng 0 đến 100000 |
+| Luồng thay thế | 3a. Thiếu tên hoặc tác giả: báo lỗi tại trường. 3b. Năm xuất bản lớn hơn năm hiện tại hoặc thể loại không tồn tại: báo lỗi tại trường. 4a. Xóa sách đã có trong phiếu mượn: không xóa, báo lỗi |
+| Quy tắc | Tên sách tối đa 200 ký tự, tác giả 120. Năm xuất bản từ 1450 đến năm hiện tại. Số lượng 0 đến 100000 |
 
 ### UC05. Quản lý thể loại
 

@@ -66,6 +66,7 @@ public sealed class TheLoaiController(LibraryFileStore store) : Controller
 
             category.Id = data.TheLoai.Select(item => item.Id).DefaultIfEmpty(0).Max() + 1;
             category.TenTheLoai = category.TenTheLoai.Trim();
+            category.MoTa = string.IsNullOrWhiteSpace(category.MoTa) ? null : category.MoTa.Trim();
             data.TheLoai.Add(category);
             return true;
         });
@@ -110,7 +111,7 @@ public sealed class TheLoaiController(LibraryFileStore store) : Controller
             }
 
             existing.TenTheLoai = category.TenTheLoai.Trim();
-            existing.MoTa = category.MoTa?.Trim();
+            existing.MoTa = string.IsNullOrWhiteSpace(category.MoTa) ? null : category.MoTa.Trim();
             return true;
         });
         if (!updated)
