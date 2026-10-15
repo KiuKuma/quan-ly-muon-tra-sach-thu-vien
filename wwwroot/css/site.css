@@ -544,7 +544,6 @@ header {
   align-items: center;
   gap: 0.55rem;
   margin-right: 1.75rem;
-  letter-spacing: -0.035em;
 }
 
 .brand-icon {
@@ -628,34 +627,28 @@ main.container {
   border: 0;
 }
 
-.dashboard-heading .eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.7rem;
-  color: #398268;
-  letter-spacing: 0.09em;
+.dashboard-heading {
+  border-bottom: 1px solid var(--line);
 }
 
-.eyebrow-mark {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #50a786;
-  box-shadow: 0 0 0 4px #e2f1e9;
+.dashboard-heading .eyebrow {
+  margin-bottom: 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .dashboard-heading h1 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 2.65rem);
-  font-weight: 700;
-  letter-spacing: -0.055em;
+  font-size: clamp(1.75rem, 3.2vw, 2.1rem);
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .dashboard-subtitle {
-  margin: 0.55rem 0 0;
-  color: #74827b;
-  font-size: 1rem;
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .dashboard-metrics {
@@ -904,8 +897,8 @@ main.container {
 }
 
 .page-heading h1 {
-  font-size: clamp(1.7rem, 3vw, 2.15rem);
-  letter-spacing: -0.045em;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  letter-spacing: 0;
 }
 
 .page-heading p {
@@ -967,6 +960,14 @@ main.container {
   background: #f7faf8;
   font-size: 0.7rem;
   letter-spacing: 0.055em;
+  white-space: nowrap;
+}
+
+/* Cột mã, năm, số lượng hẹp vừa đủ nội dung; cột tên sách nhận phần còn lại */
+.table td[data-label="Mã sách"],
+.table td[data-label="Năm xuất bản"],
+.table td[data-label="Số lượng"] {
+  white-space: nowrap;
 }
 
 .table td,
@@ -1070,10 +1071,6 @@ main.container {
 
   .dashboard-heading {
     padding: 1.1rem 0 1.3rem;
-  }
-
-  .dashboard-heading h1 {
-    font-size: 2rem;
   }
 
   .dashboard-metrics {

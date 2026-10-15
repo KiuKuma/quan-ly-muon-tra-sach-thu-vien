@@ -1,7 +1,7 @@
 # Product Backlog – Quản lý mượn trả sách thư viện
 
 **Product Owner:** Đặng Huy Quang Dũng  
-**Cơ sở:** mục 1.5 đến 1.8 của đề cương và mã nguồn nhánh `develop` (commit `1530ba4`).  
+**Cơ sở:** mục 1.5 đến 1.8 của đề cương và mã nguồn nhánh `develop` (commit `dcc0e3d`).  
 **Phương pháp:** Scrum, mỗi Sprint 2 tuần (Sprint 0 chuẩn bị, Sprint 1 đến 4 tính từ tuần 1).
 
 ## 1. Quy ước
@@ -96,4 +96,5 @@
 2. **Quy tắc tiền phạt lũy tiến (PB-19):** cần mức phạt theo số ngày trễ.
 3. **Điều kiện chặn mượn (PB-20):** cần chốt "nợ sách" nghĩa là còn phiếu quá hạn chưa trả, và có giới hạn số sách mượn cùng lúc hay không.
 4. **Tên vai trò:** thống nhất giữa tài liệu (Thủ thư, Quản trị viên) và code (Nhân viên, Quản lý).
-5. Các mục ghi "Chưa xác nhận" (PB-03, PB-04, PB-32) là sản phẩm của Huy Thành và Quỳnh Anh, chưa thấy trong repo nên cần hai bạn xác nhận.
+5. **Quyền sửa sách:** commit `f6b0b51` từng cho Nhân viên thêm, sửa, xóa sách, trái với `README.md`, PB-11 và BR-06. Nhánh `feature/sprint1-ra-soat-quang-dung` đưa về chỉ Quản lý; nếu nhóm muốn Nhân viên cũng được sửa sách thì đổi lại `[Authorize]` trong `SachController` và sửa ba tài liệu này.
+6. Các mục ghi "Chưa xác nhận" (PB-03, PB-04, PB-32) là sản phẩm của Huy Thành và Quỳnh Anh, chưa thấy trong repo nên cần hai bạn xác nhận.
