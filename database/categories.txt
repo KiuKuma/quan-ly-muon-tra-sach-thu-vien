@@ -1,0 +1,6 @@
+{"Id":1,"TenTheLoai":"Khoa học","MoTa":"Sách khoa học cho kiểm thử textfile"}
+{"Id":2,"TenTheLoai":"Lập trình","MoTa":"Sách ngôn ngữ lập trình, thuật toán và thực hành phát triển phần mềm."}
+{"Id":3,"TenTheLoai":"Công nghệ","MoTa":"Thiết kế sản phẩm số, kiến trúc và hệ thống công nghệ."}
+{"Id":4,"TenTheLoai":"Kỹ năng","MoTa":"Sách kỹ năng học tập, tư duy và phát triển bản thân."}
+{"Id":5,"TenTheLoai":"Văn học","MoTa":"Tác phẩm văn học kinh điển và hiện đại."}
+{"Id":6,"TenTheLoai":"Thiếu nhi","MoTa":"Sách dành cho thiếu nhi và bạn đọc trẻ."}

@@ -14,6 +14,7 @@ Desktop.ini
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/stop-running-library.ps1
 .idea/
 *.sublime-project
 *.sublime-workspace
@@ -62,3 +63,10 @@ bin/
 obj/
 [Dd]ebug/
 [Rr]elease/
+
+# Dữ liệu thư viện cục bộ, gồm password hash của tài khoản
+App_Data/*.txt
+App_Data/*.tmp
+App_Data/*.bak
+database/*.tmp
+database/*.bak

@@ -1,0 +1,98 @@
+@model LibraryLoanPageViewModel
+@{
+    ViewData["Title"] = "Quản lý mượn trả sách";
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">NGHIỆP VỤ THƯ VIỆN</p>
+        <h1>Quản lý mượn trả sách</h1>
+        <p class="text-secondary">@Model.Loans.TotalCount phiếu mượn</p>
+    </div>
+</div>
+
+<section class="auth-panel mb-4">
+    <h2 class="h4">Lập phiếu mượn</h2>
+    <form asp-action="Create" method="post" class="form-grid form-grid-two">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div>
+            <label asp-for="NewLoan.ReaderId" class="form-label"></label>
+            <select asp-for="NewLoan.ReaderId" class="form-select">
+                <option value="0">Chọn độc giả</option>
+                @foreach (var reader in Model.Readers)
+                {
+                    <option value="@reader.Id">@reader.Name</option>
+                }
+            </select>
+            <span asp-validation-for="NewLoan.ReaderId" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="NewLoan.BookId" class="form-label"></label>
+            <select asp-for="NewLoan.BookId" class="form-select">
+                <option value="0">Chọn sách</option>
+                @foreach (var book in Model.Books)
+                {
+                    <option value="@book.Id">@book.Name (@book.AvailableCopies bản có sẵn)</option>
+                }
+            </select>
+            <span asp-validation-for="NewLoan.BookId" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="NewLoan.Quantity" class="form-label"></label>
+            <input asp-for="NewLoan.Quantity" class="form-control" min="1" />
+            <span asp-validation-for="NewLoan.Quantity" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="NewLoan.DueAt" class="form-label"></label>
+            <input asp-for="NewLoan.DueAt" class="form-control" />
+            <span asp-validation-for="NewLoan.DueAt" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Tạo phiếu mượn</button>
+    </form>
+</section>
+
+@if (Model.Loans.TotalCount == 0)
+{
+    <div class="empty-state"><p>Chưa có phiếu mượn nào.</p></div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle responsive-data-table">
+            <thead>
+                <tr><th>Mã phiếu</th><th>Độc giả</th><th>Sách</th><th>Tài khoản nhân viên</th><th>Ngày mượn</th><th>Hạn trả</th><th>Trạng thái</th><th></th></tr>
+            </thead>
+            <tbody>
+            @foreach (var loan in Model.Loans.Items)
+            {
+                <tr>
+                    <td data-label="Mã phiếu">@loan.Id</td>
+                    <td data-label="Độc giả">@loan.ReaderName</td>
+                    <td data-label="Sách">@loan.Books</td>
+                    <td data-label="Tài khoản nhân viên">@loan.StaffUsername</td>
+                    <td data-label="Ngày mượn">@loan.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    <td data-label="Hạn trả">@loan.DueAt.ToString("dd/MM/yyyy")</td>
+                    <td data-label="Trạng thái">@loan.Status</td>
+                    <td data-label="Thao tác" class="text-end">
+                        @if (loan.Status != "Đã trả")
+                        {
+                            <form asp-action="Return" method="post">
+                                <input type="hidden" name="id" value="@loan.Id" />
+                                <button class="btn btn-sm btn-outline-primary" type="submit">Ghi nhận trả</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+@if (Model.Loans.TotalPages > 1)
+{
+    <partial name="_Pagination" model="Model.Loans.CreatePagination()" />
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,66 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model Sach
+@{
+    var isEdit = Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Sửa sách" : "Thêm sách";
+}
+
+<section class="form-panel form-panel-wide">
+    <p class="eyebrow">SÁCH</p>
+    <h1>@ViewData["Title"]</h1>
+    <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post" class="form-grid form-grid-two">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger form-span-two" role="alert"></div>
+        @if (isEdit)
+        {
+            <div>
+                <label class="form-label" asp-for="Id">Mã sách</label>
+                <input value="@Model.Id" class="form-control" readonly />
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary form-span-two">Mã sách sẽ được tự động cấp khi lưu.</p>
+        }
+        <div>
+            <label asp-for="TenSach" class="form-label"></label>
+            <input asp-for="TenSach" class="form-control" autofocus />
+            <span asp-validation-for="TenSach" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="TacGia" class="form-label"></label>
+            <input asp-for="TacGia" class="form-control" />
+            <span asp-validation-for="TacGia" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="TheLoaiId" class="form-label"></label>
+            <select asp-for="TheLoaiId" asp-items="(SelectList)ViewBag.TheLoaiId" class="form-select">
+                <option value="">Chưa phân loại</option>
+            </select>
+            <span asp-validation-for="TheLoaiId" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="NhaXuatBan" class="form-label"></label>
+            <input asp-for="NhaXuatBan" class="form-control" />
+            <span asp-validation-for="NhaXuatBan" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="NamXuatBan" class="form-label"></label>
+            <input asp-for="NamXuatBan" class="form-control" type="number" />
+            <span asp-validation-for="NamXuatBan" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="SoLuong" class="form-label"></label>
+            <input asp-for="SoLuong" class="form-control" type="number" min="0" />
+            <span asp-validation-for="SoLuong" class="text-danger"></span>
+        </div>
+        <div class="form-actions form-span-two">
+            <button type="submit" class="btn btn-primary">Lưu sách</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,23 @@
+@model LibraryDashboardViewModel
+@{
+    ViewData["Title"] = "Báo cáo thống kê";
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">TỔNG HỢP HOẠT ĐỘNG</p>
+        <h1>Báo cáo thống kê</h1>
+        <p class="text-secondary">Số liệu hiện tại của thư viện</p>
+    </div>
+</div>
+
+<section class="dashboard-metrics" aria-label="Thống kê thư viện">
+    <div class="metric-item"><span class="metric-value">@Model.BookTitles</span><span class="metric-label">Đầu sách</span></div>
+    <div class="metric-item"><span class="metric-value">@Model.AvailableCopies</span><span class="metric-label">Bản sách còn</span></div>
+    <div class="metric-item"><span class="metric-value">@Model.Categories</span><span class="metric-label">Thể loại</span></div>
+    <div class="metric-item"><span class="metric-value">@Model.Readers</span><span class="metric-label">Độc giả</span></div>
+    <div class="metric-item"><span class="metric-value">@Model.TotalLoans</span><span class="metric-label">Tổng phiếu mượn</span></div>
+    <div class="metric-item"><span class="metric-value">@Model.ActiveLoans</span><span class="metric-label">Đang mượn</span></div>
+    <div class="metric-item metric-alert"><span class="metric-value">@Model.OverdueLoans</span><span class="metric-label">Quá hạn</span></div>
+    <div class="metric-item"><span class="metric-value">@Model.ReturnedLoans</span><span class="metric-label">Đã trả</span></div>
+</section>

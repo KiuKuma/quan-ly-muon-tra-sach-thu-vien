@@ -1,0 +1,14 @@
+@model TheLoai
+@{
+    ViewData["Title"] = "Xóa thể loại";
+}
+
+<section class="form-panel">
+    <p class="eyebrow">XÁC NHẬN THAO TÁC</p>
+    <h1>Xóa thể loại?</h1>
+    <p>Bạn đang xóa thể loại <strong>@Model.TenTheLoai</strong>. Thao tác này không thể hoàn tác.</p>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="form-actions">
+        <button type="submit" class="btn btn-danger">Xóa thể loại</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+    </form>
+</section>

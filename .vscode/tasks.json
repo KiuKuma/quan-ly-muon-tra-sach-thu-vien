@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "dependsOn": "stop-running-library",
+      "dependsOrder": "sequence",
+      "args": [
+        "build",
+        "${workspaceFolder}\\quan-ly-muon-tra-sach-thu-vien.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "stop-running-library",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.vscode\\stop-running-library.ps1"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

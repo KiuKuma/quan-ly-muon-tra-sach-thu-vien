@@ -1,0 +1,33 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<section class="auth-panel">
+    <p class="eyebrow">TÀI KHOẢN THƯ VIỆN</p>
+    <h1>Đăng nhập</h1>
+    <p class="text-secondary">Đăng nhập bằng tên tài khoản và mật khẩu được cấp.</p>
+    <form asp-action="Login" method="post" class="form-grid">
+        <input asp-for="ReturnUrl" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div>
+            <label asp-for="Username" class="form-label"></label>
+            <input asp-for="Username" class="form-control" autocomplete="username" />
+            <span asp-validation-for="Username" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" class="form-control" autocomplete="current-password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+        <label class="form-check">
+            <input asp-for="RememberMe" class="form-check-input" />
+            <span class="form-check-label">@Html.DisplayNameFor(model => model.RememberMe)</span>
+        </label>
+        <button type="submit" class="btn btn-primary">Đăng nhập</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

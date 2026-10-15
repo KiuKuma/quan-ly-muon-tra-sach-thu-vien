@@ -1,0 +1,24 @@
+@model Sach
+@{
+    ViewData["Title"] = "Chi tiết sách";
+}
+
+<section class="form-panel">
+    <p class="eyebrow">SÁCH</p>
+    <div class="page-heading compact-heading">
+        <h1>@Model.TenSach</h1>
+        @if (User.IsInRole(LibraryRoles.QuanLy))
+        {
+            <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa sách</a>
+        }
+    </div>
+    <dl class="detail-list">
+        <dt>Mã sách</dt><dd>@Model.Id</dd>
+        <dt>Tác giả</dt><dd>@Model.TacGia</dd>
+        <dt>Thể loại</dt><dd>@(Model.TheLoai?.TenTheLoai ?? "Chưa phân loại")</dd>
+        <dt>Nhà xuất bản</dt><dd>@(Model.NhaXuatBan ?? "—")</dd>
+        <dt>Năm xuất bản</dt><dd>@(Model.NamXuatBan?.ToString() ?? "—")</dd>
+        <dt>Số lượng</dt><dd>@Model.SoLuong</dd>
+    </dl>
+    <a class="btn btn-link px-0" asp-action="Index">Quay lại danh sách</a>
+</section>

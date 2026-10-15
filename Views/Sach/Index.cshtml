@@ -1,0 +1,74 @@
+@model PagedResult<Sach>
+@{
+    ViewData["Title"] = "Sách";
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">KHO SÁCH</p>
+        <h1>Sách</h1>
+        <p class="text-secondary">@Model.TotalCount đầu sách</p>
+    </div>
+    @if (User.IsInRole(LibraryRoles.QuanLy))
+    {
+        <a class="btn btn-primary" asp-action="Create">Thêm sách</a>
+    }
+</div>
+
+<form asp-action="Index" method="get" class="search-row">
+    <label for="search" class="visually-hidden">Tìm theo tên sách hoặc tác giả</label>
+    <input id="search" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm tên sách hoặc tác giả" />
+    <button type="submit" class="btn btn-outline-secondary">Tìm</button>
+    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Search))
+    {
+        <a class="btn btn-link" asp-action="Index">Xóa lọc</a>
+    }
+</form>
+
+@if (Model.TotalCount == 0)
+{
+    <div class="empty-state"><p>Không tìm thấy sách phù hợp.</p></div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle responsive-data-table">
+            <thead>
+                <tr>
+                    <th>Mã sách</th>
+                    <th>Tên sách</th>
+                    <th>Tác giả</th>
+                    <th>Nhà xuất bản</th>
+                    <th>Năm xuất bản</th>
+                    <th class="text-end">Số lượng</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var book in Model.Items)
+            {
+                <tr>
+                    <td data-label="Mã sách">@book.Id</td>
+                    <td data-label="Tên sách" class="fw-semibold">@book.TenSach</td>
+                    <td data-label="Tác giả">@book.TacGia</td>
+                    <td data-label="Nhà xuất bản">@(book.NhaXuatBan ?? "—")</td>
+                    <td data-label="Năm xuất bản">@(book.NamXuatBan?.ToString() ?? "—")</td>
+                    <td data-label="Số lượng" class="text-end">@book.SoLuong</td>
+                    <td data-label="Thao tác" class="text-end text-nowrap">
+                        @if (User.IsInRole(LibraryRoles.QuanLy))
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@book.Id">Sửa</a>
+                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@book.Id">Xóa</a>
+                        }
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@book.Id">Xem</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+@if (Model.TotalPages > 1)
+{
+    <partial name="_Pagination" model="Model.CreatePagination((string?)ViewBag.Search)" />
+}

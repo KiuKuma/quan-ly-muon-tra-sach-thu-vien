@@ -1,0 +1,36 @@
+@model TheLoaiDetailsViewModel
+@{
+    ViewData["Title"] = "Chi tiết thể loại";
+    var category = Model.Category;
+    var bookPagination = Model.Books.CreatePagination(action: "Details", routeId: category.Id);
+}
+
+<section class="form-panel">
+    <p class="eyebrow">THỂ LOẠI</p>
+    <div class="page-heading compact-heading">
+        <h1>@category.TenTheLoai</h1>
+        @if (User.IsInRole(LibraryRoles.QuanLy))
+        {
+            <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@category.Id">Sửa thể loại</a>
+        }
+    </div>
+    <dl class="detail-list">
+        <dt>Mô tả</dt><dd>@(string.IsNullOrWhiteSpace(category.MoTa) ? "Chưa có mô tả" : category.MoTa)</dd>
+        <dt>Số đầu sách</dt><dd>@Model.Books.TotalCount</dd>
+    </dl>
+    @if (Model.Books.TotalCount > 0)
+    {
+        <h2 class="section-title">Sách thuộc thể loại</h2>
+        <ul class="plain-list">
+            @foreach (var book in Model.Books.Items)
+            {
+                <li>@book.TenSach <span class="text-secondary">/ @book.TacGia</span></li>
+            }
+        </ul>
+        @if (Model.Books.TotalPages > 1)
+        {
+            <partial name="_Pagination" model="bookPagination" />
+        }
+    }
+    <a class="btn btn-link px-0" asp-action="Index">Quay lại danh sách</a>
+</section>
