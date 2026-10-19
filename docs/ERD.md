@@ -1,8 +1,8 @@
 # ERD chuẩn 3NF – Sprint 0
 
 **Người thực hiện:** Đặng Huy Quang Dũng  
-**Cơ sở:** nhánh `develop`, commit `1530ba4` (mã nguồn nền của Đỗ Phương Anh)  
-**Lưu trữ:** 10 tệp text JSON Lines trong thư mục `database` (không dùng SQL), xem [CAU-TRUC-DU-LIEU.md](CAU-TRUC-DU-LIEU.md).
+**Cơ sở:** nhánh `develop`, commit `dcc0e3d` (mã nguồn nền của Đỗ Phương Anh)  
+**Lưu trữ:** tệp text JSON Lines trong thư mục `database` (không dùng SQL), xem [CAU-TRUC-DU-LIEU.md](CAU-TRUC-DU-LIEU.md).
 
 ## 1. Khảo sát dữ liệu
 
@@ -252,7 +252,7 @@ erDiagram
 ### Ràng buộc nghiệp vụ
 
 - Duy nhất (không phân biệt hoa thường): `TaiKhoan.Username`, `NguoiDung.Email`, `TheLoai.TenTheLoai`.
-- `Sach.SoLuong >= 0`; `Sach.NamXuatBan` trong khoảng 1450 đến 2200 (khớp `[Range]` hiện tại).
+- `Sach.SoLuong >= 0`; `Sach.NamXuatBan` trong khoảng 1450 đến năm hiện tại (`[Range]` cho phép đến 2200, `SachController` chặn năm lớn hơn năm hiện tại).
 - `PhieuMuon.HanTra >= NgayMuon`; `ChiTietPhieuMuon.SoLuong > 0`.
 - `ChiTietPhieuTra.SoLuongTra` không vượt số lượng mượn chưa trả của dòng tương ứng.
 - Không xóa `Sach`, `DocGia`, `NhanVien` đang được phiếu mượn tham chiếu; không xóa `TheLoai` còn sách. Các điều kiện này code hiện tại đã chặn.

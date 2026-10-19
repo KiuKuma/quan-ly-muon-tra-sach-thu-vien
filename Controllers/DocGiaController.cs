@@ -175,7 +175,7 @@ public sealed class DocGiaController(
             return RedirectToAction(nameof(Index));
         }
 
-        TempData["Success"] = "Đã xóa độc giả và tài khoản liên kết (nếu có).";
+        TempData["Success"] = "Đã xóa độc giả.";
         return RedirectToAction(nameof(Index));
     }
 

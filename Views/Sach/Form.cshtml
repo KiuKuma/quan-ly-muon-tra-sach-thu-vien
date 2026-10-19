@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
 @model Sach
 @{
     var isEdit = Model.Id != 0;
@@ -30,6 +31,13 @@
             <label asp-for="TacGia" class="form-label"></label>
             <input asp-for="TacGia" class="form-control" />
             <span asp-validation-for="TacGia" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="TheLoaiId" class="form-label"></label>
+            <select asp-for="TheLoaiId" asp-items="(SelectList)ViewBag.TheLoaiId" class="form-select">
+                <option value="">Chưa phân loại</option>
+            </select>
+            <span asp-validation-for="TheLoaiId" class="text-danger"></span>
         </div>
         <div>
             <label asp-for="NhaXuatBan" class="form-label"></label>

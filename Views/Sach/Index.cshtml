@@ -9,7 +9,7 @@
         <h1>Sách</h1>
         <p class="text-secondary">@Model.TotalCount đầu sách</p>
     </div>
-    @if (User.IsInRole(LibraryRoles.NhanVien) || User.IsInRole(LibraryRoles.QuanLy))
+    @if (User.IsInRole(LibraryRoles.QuanLy))
     {
         <a class="btn btn-primary" asp-action="Create">Thêm sách</a>
     }
@@ -55,7 +55,7 @@ else
                     <td data-label="Năm xuất bản">@(book.NamXuatBan?.ToString() ?? "—")</td>
                     <td data-label="Số lượng" class="text-end">@book.SoLuong</td>
                     <td data-label="Thao tác" class="text-end text-nowrap">
-                        @if (User.IsInRole(LibraryRoles.NhanVien) || User.IsInRole(LibraryRoles.QuanLy))
+                        @if (User.IsInRole(LibraryRoles.QuanLy))
                         {
                             <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@book.Id">Sửa</a>
                             <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@book.Id">Xóa</a>
