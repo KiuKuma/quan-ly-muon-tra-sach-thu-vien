@@ -14,6 +14,16 @@
             routeValues["id"] = Model.RouteId.Value;
         }
 
+        if (Model.ReaderId.HasValue)
+        {
+            routeValues["readerId"] = Model.ReaderId.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Model.Status))
+        {
+            routeValues["status"] = Model.Status;
+        }
+
         return Url.Action(Model.Action, controller, routeValues) ?? "#";
     }
 }

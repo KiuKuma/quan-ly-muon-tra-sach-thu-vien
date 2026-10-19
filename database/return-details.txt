@@ -1,0 +1,4 @@
+{"Id":1,"PhieuTraId":1,"ChiTietPhieuMuonId":1,"SoLuongTra":1,"TienPhat":0,"TinhTrang":"Tot","GhiChu":null}
+{"Id":2,"PhieuTraId":2,"ChiTietPhieuMuonId":3,"SoLuongTra":1,"TienPhat":0,"TinhTrang":"Tot","GhiChu":"Ngày trả giả định theo ngày hẹn trả"}
+{"Id":3,"PhieuTraId":3,"ChiTietPhieuMuonId":6,"SoLuongTra":1,"TienPhat":0,"TinhTrang":"Tot","GhiChu":null}
+{"Id":4,"PhieuTraId":3,"ChiTietPhieuMuonId":8,"SoLuongTra":2,"TienPhat":0,"TinhTrang":"Tot","GhiChu":null}

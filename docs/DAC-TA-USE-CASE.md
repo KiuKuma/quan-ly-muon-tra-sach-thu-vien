@@ -32,10 +32,11 @@ flowchart LR
         UC08(["UC08 Ghi nhận trả sách"])
         UC09(["UC09 Tính tiền phạt trễ hạn"])
         UC10(["UC10 Kiểm tra điều kiện mượn"])
-        UC11(["UC11 Xem lịch sử mượn trả"])
-        UC12(["UC12 Tìm kiếm sách"])
-        UC13(["UC13 Xem tổng quan"])
-        UC14(["UC14 Xem báo cáo thống kê"])
+        UC11(["UC11 Xem chi tiết phiếu mượn"])
+        UC12(["UC12 Xem lịch sử mượn trả"])
+        UC13(["UC13 Tìm kiếm sách"])
+        UC14(["UC14 Xem tổng quan"])
+        UC15(["UC15 Xem báo cáo thống kê"])
     end
 
     TT --> UC01
@@ -46,13 +47,14 @@ flowchart LR
     TT --> UC12
     TT --> UC13
     TT --> UC14
+    TT --> UC15
     TT --> UC04
     TT --> UC05
     TT --> UC06
     QT --> UC03
     DG --> UC01
-    DG --> UC11
     DG --> UC12
+    DG --> UC13
     UC07 -. "include" .-> UC10
     UC08 -. "include" .-> UC09
 ```
@@ -69,14 +71,15 @@ Thủ thư chỉ **xem** ở UC04, UC05, UC06; Quản trị viên mới được
 | UC04 | Quản lý sách | Quản trị viên (Thủ thư xem) | 1 | Xong |
 | UC05 | Quản lý thể loại | Quản trị viên (Thủ thư xem) | 1 | Xong |
 | UC06 | Quản lý độc giả | Quản trị viên (Thủ thư xem) | 1 | Xong |
-| UC07 | Lập phiếu mượn | Thủ thư | 2 | Một phần |
-| UC08 | Ghi nhận trả sách | Thủ thư | 2 | Một phần |
-| UC09 | Tính tiền phạt trễ hạn | Hệ thống | 2 | Đề xuất |
-| UC10 | Kiểm tra điều kiện mượn | Hệ thống | 2 | Đề xuất |
-| UC11 | Xem lịch sử mượn trả | Thủ thư, Độc giả | 2, 3 | Đề xuất |
-| UC12 | Tìm kiếm sách | Thủ thư, Độc giả | 1, 3 | Một phần (chỉ theo tên, tác giả) |
-| UC13 | Xem tổng quan | Thủ thư, Quản trị viên | 1 | Xong |
-| UC14 | Xem báo cáo thống kê | Thủ thư, Quản trị viên | 3 | Một phần |
+| UC07 | Lập phiếu mượn | Thủ thư | 2 | Xong |
+| UC08 | Ghi nhận trả sách | Thủ thư | 2 | Xong |
+| UC09 | Tính tiền phạt trễ hạn | Hệ thống | 2 | Xong |
+| UC10 | Kiểm tra điều kiện mượn | Hệ thống | 2 | Xong |
+| UC11 | Xem chi tiết phiếu mượn | Thủ thư | 2 | Xong |
+| UC12 | Xem lịch sử mượn trả | Thủ thư, Độc giả | 2, 3 | Đề xuất |
+| UC13 | Tìm kiếm sách | Thủ thư, Độc giả | 1, 3 | Một phần (chỉ theo tên, tác giả) |
+| UC14 | Xem tổng quan | Thủ thư, Quản trị viên | 1 | Xong |
+| UC15 | Xem báo cáo thống kê | Thủ thư, Quản trị viên | 3 | Một phần |
 
 ## 4. Đặc tả chi tiết
 
@@ -133,41 +136,51 @@ Thủ thư chỉ **xem** ở UC04, UC05, UC06; Quản trị viên mới được
 | Mô tả | Ghi nhận việc độc giả mượn sách và cập nhật tồn kho |
 | Tiền điều kiện | Đã đăng nhập; có độc giả; có sách còn ít nhất một bản |
 | Hậu điều kiện | Có phiếu mới trạng thái "Đang mượn"; số lượng sách còn giảm đúng số đã mượn |
-| Luồng chính | 1. Thủ thư chọn độc giả, sách, số lượng, hạn trả. 2. Hệ thống kiểm tra điều kiện. 3. Hệ thống tạo phiếu (ghi nhân viên lập và ngày mượn là hiện tại), tạo chi tiết phiếu và trừ số lượng sách. 4. Hiển thị thông báo thành công |
-| Luồng thay thế | 2a. Độc giả hoặc sách không tồn tại, số lượng mượn lớn hơn số còn, hạn trả trước hôm nay: không tạo phiếu, báo lỗi chung. 2b. Độc giả không đủ điều kiện (xem UC10): từ chối *(đề xuất)* |
-| Quy tắc | Số lượng mượn 1 đến 100. Phiếu hiện chứa một đầu sách; mô hình dữ liệu cho phép nhiều dòng chi tiết, nên có thể mở rộng nhiều sách trên một phiếu |
+| Luồng chính | 1. Thủ thư nhập mã độc giả và xác nhận tên tự hiển thị. 2. Nhập ngày mượn, ngày hẹn trả và chọn một hoặc nhiều sách. 3. Hệ thống hiển thị mã, tác giả, nhà xuất bản, số lượng còn; thủ thư nhập số lượng mượn. 4. Hệ thống kiểm tra tồn kho, tạo mã phiếu tự động, lưu chi tiết và trừ tồn kho. |
+| Luồng thay thế | Mã độc giả hoặc sách không hợp lệ, ngày không đúng thứ tự, hoặc tồn kho không đủ: không tạo phiếu và báo lỗi. |
+| Quy tắc | Mỗi đầu sách mượn từ 1 đến 100 cuốn; nhiều đầu sách có thể cùng thuộc một phiếu |
 
 ### UC08. Ghi nhận trả sách
 
 | Mục | Nội dung |
 |---|---|
 | Tác nhân | Thủ thư |
-| Mô tả | Đóng phiếu mượn khi độc giả trả sách |
-| Tiền điều kiện | Phiếu tồn tại và chưa ở trạng thái "Đã trả" |
-| Hậu điều kiện | Phiếu chuyển "Đã trả"; số lượng sách được cộng lại vào kho |
-| Luồng chính | 1. Thủ thư chọn phiếu cần trả. 2. Hệ thống cộng lại số lượng từng sách trên phiếu. 3. Hệ thống đặt trạng thái "Đã trả" và báo thành công |
-| Luồng thay thế | Phiếu không tồn tại hoặc đã trả: báo "Không tìm thấy phiếu mượn đang hoạt động". Phiếu có chi tiết sách không hợp lệ: báo lỗi dữ liệu |
-| Quy tắc | Trạng thái "Quá hạn" được tính khi hiển thị: phiếu chưa trả và hạn trả trước hôm nay. *Chưa ghi ngày trả thực tế và chưa tính phạt (xem UC09)* |
+| Mô tả | Kiểm tra sách nhận lại và lập phiếu trả cho một phần hoặc toàn bộ phiếu mượn |
+| Tiền điều kiện | Phiếu tồn tại và còn sách chưa trả |
+| Hậu điều kiện | Có phiếu trả và chi tiết trả ghi số lượng, tình trạng, ghi chú; trạng thái phiếu mượn được cập nhật |
+| Luồng chính | 1. Thủ thư tìm phiếu theo mã thẻ độc giả. 2. Chọn phiếu, kiểm tra từng đầu sách. 3. Nhập số lượng nhận, tình trạng tốt/hư hỏng và ghi chú. 4. Hệ thống tạo phiếu trả, cộng sách tốt vào tồn kho và cập nhật trạng thái phiếu mượn. |
+| Luồng thay thế | Số lượng trả vượt số còn mượn hoặc tình trạng không hợp lệ: không lập phiếu và báo lỗi. |
+| Quy tắc | Có thể lập nhiều phiếu trả trên một phiếu mượn; sách hư hỏng được ghi nhận nhưng không cộng vào số lượng sẵn có. Tra cứu quản lý hỗ trợ lọc mã thẻ và trạng thái; màn hình chi tiết hiển thị từng lần trả và tiền phạt. Tiền phạt được chốt theo số lượng sách thực trả tại mỗi lần trả. |
 
-### UC09. Tính tiền phạt trễ hạn *(Đề xuất, Sprint 2)*
+### UC09. Tính tiền phạt trễ hạn
 
 | Mục | Nội dung |
 |---|---|
 | Tác nhân | Hệ thống (kích hoạt khi Thủ thư thực hiện UC08) |
 | Mô tả | Khi trả sách sau hạn, hệ thống tính tiền phạt lũy tiến theo số ngày trễ |
 | Luồng chính | 1. Ghi nhận ngày trả thực tế. 2. Nếu ngày trả sau hạn trả, tính số ngày trễ. 3. Áp mức phạt lũy tiến để ra tiền phạt. 4. Lưu tiền phạt vào chi tiết phiếu trả (`ChiTietPhieuTra.TienPhat` trong ERD 3NF). 5. Hiển thị tiền phạt cho Thủ thư |
-| Quy tắc | Mức phạt theo ngày chưa được nhóm chốt. Tiền phạt lưu tại thời điểm trả để thay đổi mức phạt sau này không làm sai lịch sử |
+| Quy tắc | Tính theo từng cuốn còn đang mượn, cộng dồn theo bậc biên: ngày 1–7 là 1.000đ/cuốn/ngày; ngày 8–30 là 2.000đ/cuốn/ngày; từ ngày 31 là 5.000đ/cuốn/ngày. Trong lúc phiếu còn sách chưa trả, hiển thị và tính vào nợ phạt số tiền tạm tính đến ngày hiện tại. Khi trả từng phần, chốt tiền phạt cho số sách trả vào chi tiết phiếu trả; phần còn mượn tiếp tục phát sinh phạt, không tính trùng số sách đã trả. Ngày trễ = ngày trả thực tế trừ hạn trả, không tính phạt nếu trả đúng hạn. |
 
-### UC10. Kiểm tra điều kiện mượn *(Đề xuất, Sprint 2)*
+### UC10. Kiểm tra và thanh toán nợ phạt
 
 | Mục | Nội dung |
 |---|---|
 | Tác nhân | Hệ thống (kích hoạt trong UC07) |
-| Mô tả | Chặn lập phiếu khi độc giả không đủ điều kiện |
-| Luồng chính | 1. Khi lập phiếu, hệ thống tìm các phiếu của độc giả chưa trả. 2. Nếu có phiếu quá hạn hoặc còn nợ tiền phạt, hệ thống từ chối và nêu lý do. 3. Nếu không, cho phép tiếp tục |
-| Quy tắc | Chưa chốt: có giới hạn số sách mượn cùng lúc hay không, và nợ phạt xác định thế nào khi UC09 hoàn thành |
+| Mô tả | Ngăn tạo phiếu mượn mới khi độc giả còn tiền phạt chưa thanh toán |
+| Luồng chính | 1. Khi gửi yêu cầu mượn, hệ thống tìm mọi sách chưa trả và tiền phạt (bao gồm khoản phạt tạm tính của sách quá hạn chưa trả) trong cùng vùng khóa cập nhật dữ liệu. 2. Nếu còn sách chưa trả hoặc tiền phạt, không tạo phiếu, không trừ tồn kho và hiển thị lý do cụ thể. 3. Nhân viên nhận sách và xác nhận thu tiền trong chi tiết phiếu trả. 4. Khi không còn sách chưa trả hoặc nợ phạt, độc giả có thể mượn sách |
+| Luồng thay thế | Phiếu trả đã thanh toán, không có nợ phạt hoặc không còn sách chưa trả: cho phép tiếp tục; không ghi nhận thu trùng |
+| Quy tắc | Mọi kiểm tra nợ phạt và cập nhật tồn kho/phiếu mượn chạy bên trong cùng `LibraryFileStore.UpdateAsync` để đồng bộ trong một tiến trình ứng dụng. |
 
-### UC11. Xem lịch sử mượn trả *(Đề xuất, Sprint 2 và 3)*
+### UC11. Xem chi tiết phiếu mượn
+
+| Mục | Nội dung |
+|---|---|
+| Tác nhân | Nhân viên, Quản lý |
+| Mô tả | Xem sách, số lượng còn phải trả, thông tin độc giả và lịch sử trả/phạt/thanh toán của một phiếu |
+| Luồng chính | 1. Chọn mã phiếu trong danh sách. 2. Hệ thống hiển thị thông tin phiếu mượn và từng đầu sách. 3. Hiển thị từng phiếu trả, tiền phạt đã chốt, số đã thu và số còn nợ. 4. Với khoản còn nợ, nhân viên xác nhận thu tiền từ màn hình chi tiết |
+| Luồng thay thế | Mã phiếu không tồn tại: trả về trang không tìm thấy |
+
+### UC12. Xem lịch sử mượn trả *(Đề xuất, Sprint 2 và 3)*
 
 | Mục | Nội dung |
 |---|---|
@@ -176,7 +189,7 @@ Thủ thư chỉ **xem** ở UC04, UC05, UC06; Quản trị viên mới được
 | Luồng chính | 1. Chọn độc giả (Thủ thư) hoặc mở trang cá nhân (Độc giả). 2. Hệ thống liệt kê phiếu theo thời gian mới nhất trước. 3. Hiển thị trạng thái Đang mượn, Quá hạn, Đã trả |
 | Luồng thay thế | Độc giả chưa có phiếu nào: hiển thị thông báo trống |
 
-### UC12. Tìm kiếm sách
+### UC13. Tìm kiếm sách
 
 | Mục | Nội dung |
 |---|---|
@@ -186,7 +199,7 @@ Thủ thư chỉ **xem** ở UC04, UC05, UC06; Quản trị viên mới được
 | Luồng thay thế | Không có kết quả: hiển thị "Không tìm thấy sách phù hợp" |
 | Mở rộng (Sprint 3) | Lọc thêm theo thể loại, năm xuất bản; tìm không phân biệt dấu tiếng Việt |
 
-### UC14. Xem báo cáo thống kê
+### UC15. Xem báo cáo thống kê
 
 | Mục | Nội dung |
 |---|---|

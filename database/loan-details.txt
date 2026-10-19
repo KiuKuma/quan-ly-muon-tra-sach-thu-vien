@@ -4,3 +4,9 @@
 {"Id":4,"PhieuMuonId":4,"SachId":1,"SoLuong":1}
 {"Id":5,"PhieuMuonId":5,"SachId":2,"SoLuong":1}
 {"Id":6,"PhieuMuonId":6,"SachId":3,"SoLuong":1}
+{"Id":7,"PhieuMuonId":5,"SachId":9,"SoLuong":1}
+{"Id":8,"PhieuMuonId":6,"SachId":5,"SoLuong":2}
+{"Id":9,"PhieuMuonId":7,"SachId":5,"SoLuong":2}
+{"Id":10,"PhieuMuonId":8,"SachId":5,"SoLuong":2}
+{"Id":11,"PhieuMuonId":9,"SachId":5,"SoLuong":1}
+{"Id":12,"PhieuMuonId":10,"SachId":5,"SoLuong":1}

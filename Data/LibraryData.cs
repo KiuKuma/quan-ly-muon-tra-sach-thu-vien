@@ -12,6 +12,8 @@ public sealed class LibraryData
     public List<NhanVien> NhanVien { get; set; } = [];
     public List<PhieuMuon> PhieuMuon { get; set; } = [];
     public List<ChiTietPhieuMuon> ChiTietPhieuMuon { get; set; } = [];
+    public List<PhieuTra> PhieuTra { get; set; } = [];
+    public List<ChiTietPhieuTra> ChiTietPhieuTra { get; set; } = [];
 }
 
 public sealed class LibraryAccount

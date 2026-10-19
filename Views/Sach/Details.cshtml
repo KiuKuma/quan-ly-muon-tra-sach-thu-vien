@@ -15,7 +15,6 @@
     <dl class="detail-list">
         <dt>Mã sách</dt><dd>@Model.Id</dd>
         <dt>Tác giả</dt><dd>@Model.TacGia</dd>
-        <dt>Thể loại</dt><dd>@Model.TheLoai?.TenTheLoai</dd>
         <dt>Nhà xuất bản</dt><dd>@(Model.NhaXuatBan ?? "—")</dd>
         <dt>Năm xuất bản</dt><dd>@(Model.NamXuatBan?.ToString() ?? "—")</dd>
         <dt>Số lượng</dt><dd>@Model.SoLuong</dd>

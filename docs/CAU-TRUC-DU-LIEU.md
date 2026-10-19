@@ -13,7 +13,7 @@ Dự án lưu dữ liệu bằng tệp text JSON Lines (mỗi dòng là một b�
 
 | Bước | Thành phần | Việc làm |
 |---|---|---|
-| 1 | `LibraryFileStore.EnsureCreatedAsync()` | Tạo thư mục dữ liệu (`database`) và đủ 8 tệp. Nếu thấy `library.json` cũ thì tách sang các tệp mới |
+| 1 | `LibraryFileStore.EnsureCreatedAsync()` | Tạo thư mục dữ liệu (`database`) và đủ 10 tệp. Nếu thấy `library.json` cũ thì tách sang các tệp mới |
 | 2 | `LibraryAccountService.EnsureDefaultAccountsAsync()` | Bảo đảm có bốn tài khoản ban đầu (`admin`, `nhanvien1`, `nhanvien2`, `nhanvien3`) |
 | 3 | `LibrarySampleDataSeeder.SeedAsync()` | Bổ sung thể loại, sách, độc giả, nhân viên và phiếu mượn mẫu còn thiếu, không ghi đè dữ liệu đã có |
 
@@ -31,6 +31,8 @@ Mọi lần ghi đều đi qua `LibraryFileStore.UpdateAsync`: có khóa `Semaph
 | `books.txt` | `Id`, `TenSach`, `TacGia`, `NhaXuatBan`, `NamXuatBan`, `SoLuong`, `TheLoaiId` | PK `Id`; FK `TheLoaiId` → `categories` (có thể rỗng với sách tạo mới qua biểu mẫu quản lý) |
 | `loans.txt` | `Id`, `DocGiaId`, `NhanVienId`, `TenTaiKhoanNhanVien`, `NgayMuon`, `HanTra`, `TrangThai` | PK `Id`; FK → `readers`, `staff` |
 | `loan-details.txt` | `Id`, `PhieuMuonId`, `SachId`, `SoLuong` | PK `Id`; FK → `loans`, `books` |
+| `returns.txt` | `Id`, `PhieuMuonId`, `NhanVienId`, `TenTaiKhoanNhanVien`, `NgayTra`, `TienPhatDaThanhToan`, `NgayThanhToanTienPhat`, `TenTaiKhoanThuTienPhat` | PK `Id`; FK → `loans`, `staff`; ghi nhận thanh toán tiền phạt theo phiếu trả |
+| `return-details.txt` | `Id`, `PhieuTraId`, `ChiTietPhieuMuonId`, `SoLuongTra`, `TienPhat`, `TinhTrang`, `GhiChu` | PK `Id`; FK → `returns`, `loan-details`; tiền phạt chốt theo từng dòng sách |
 
 Mã sách (`Id`) kiểu số được cấp tự động bằng `Max(Id) + 1` trong cùng lần ghi; người dùng không nhập mã. Sách mới qua biểu mẫu quản lý nhập tên sách, tác giả, nhà xuất bản, năm xuất bản và số lượng. Khi sửa, thể loại hiện có được giữ nguyên.
 
@@ -42,14 +44,31 @@ Tệp text không tự kiểm tra khóa ngoại hay tính duy nhất, nên các 
 |---|---|
 | `DocGia.Email` không trùng với độc giả khác và hồ sơ tài khoản | `DocGiaController` |
 | `TheLoai.TenTheLoai` không trùng (không phân biệt hoa thường) | `TheLoaiController` |
+| Mượn: độc giả và nhân viên hợp lệ, hạn trả không trước ngày mượn, đủ số lượng mọi sách | `MuonTraController.Borrow` |
+| Mượn nhiều đầu sách trên một phiếu, trừ tồn kho theo từng sách | `MuonTraController.Borrow` |
+| Trả: số lượng không vượt số còn mượn; mỗi lần trả tạo phiếu và chi tiết trả | `MuonTraController.Return` |
+| Sách trả tốt được cộng vào tồn kho; sách hư hỏng được lưu tình trạng và không cộng vào số lượng sẵn có | `MuonTraController.Return` |
+| Phạt trễ lũy tiến theo từng cuốn đã trả: 1–7 ngày 1.000đ/ngày; 8–30 ngày 2.000đ/ngày; từ ngày 31 là 5.000đ/ngày | `MuonTraController.Return` |
+| Không tạo phiếu mượn khi độc giả còn tiền phạt chưa thanh toán; xác nhận thu tiền gắn với phiếu trả | `MuonTraController.Borrow`, `MuonTraController.PayFine` |
+| Không tạo phiếu mượn khi độc giả còn bất kỳ sách nào chưa trả, kể cả phiếu còn trong hạn | `MuonTraController.Borrow` |
 | Không xóa Sách đã có trong phiếu mượn | `SachController.DeleteConfirmed` |
 | Không xóa Độc giả đã có phiếu mượn | `DocGiaController.DeleteConfirmed` |
 | Không xóa Thể loại còn sách | `TheLoaiController.DeleteConfirmed` |
-| Tạo phiếu: có độc giả, có sách, đủ số lượng, hạn trả không ở quá khứ | `MuonTraController.Create` |
+| Tra cứu phiếu theo mã độc giả và trạng thái; phân trang danh sách mượn/trả | `MuonTraController.Index` |
 
-Các quy tắc chưa có nơi kiểm tra (để ngỏ cho các sprint sau): `Sach.SoLuong` không âm sau khi Quản lý sửa tay; phiếu mượn phải có chi tiết; `HanTra` không trước `NgayMuon`; kiểm tra khóa ngoại khi dữ liệu bị sửa tay trong tệp.
+Các quy tắc chưa có nơi kiểm tra: `Sach.SoLuong` không âm sau khi Quản lý sửa tay; kiểm tra khóa ngoại khi dữ liệu bị sửa tay trong tệp.
 
-## 4. Quản lý Sách và Độc giả
+## 4. Quy trình mượn, trả và tra cứu phiếu
+
+- `/MuonTra/Borrow`: chọn mã độc giả, tên được tự hiển thị; nhập ngày mượn/hẹn trả; chọn một hoặc nhiều sách. Mã, tên, tác giả, nhà xuất bản và số lượng còn được hiển thị khi chọn sách. Mã phiếu tự cấp.
+- `/MuonTra/Return`: lọc phiếu còn sách cần trả theo mã thẻ; chọn phiếu, nhập số lượng nhận cho từng đầu sách, tình trạng tốt/hư hỏng và ghi chú. Có thể lập nhiều phiếu trả cho một phiếu mượn (trả từng phần).
+- `/MuonTra`: tra cứu theo mã thẻ và trạng thái, xem danh sách phân trang; chọn mã phiếu để mở chi tiết sách, số lượng trả, lịch sử phiếu trả, tiền phạt và thanh toán.
+- Khi tạo phiếu, hệ thống chặn nếu còn bất kỳ sách mượn nào chưa trả (kể cả còn trong hạn) hoặc còn nợ phạt.
+- Sách trả tốt được cộng vào số lượng sẵn có. Sách hư hỏng được lưu trong chi tiết phiếu trả nhưng không tăng số lượng có thể cho mượn.
+- Tiền phạt lũy tiến của sách còn đang mượn được tính đến ngày hiện tại để hiển thị và cộng vào nợ độc giả; khi trả một phần, phạt được chốt tại `return-details.txt` cho số sách trả, còn phần chưa trả tiếp tục phát sinh. Không tính hai lần tiền phạt cho sách đã trả. Khoản đã chốt không đổi nếu biểu phí được điều chỉnh; thanh toán được ghi nhận trên phiếu trả, khoản chưa thu chặn lập phiếu mượn mới.
+- Các thao tác mượn/trả/thu tiền chạy trong `LibraryFileStore.UpdateAsync`, dùng khóa `SemaphoreSlim` chung để kiểm tra và ghi dữ liệu tuần tự trong một tiến trình. Dự án yêu cầu chỉ chạy một tiến trình ứng dụng tại một thời điểm.
+
+## 5. Quản lý Sách và Độc giả
 
 Hai chức năng này đã có trong `develop` (`SachController`, `DocGiaController`, các view tương ứng). Bảng dưới là tài liệu hóa theo đúng hành vi của code.
 
@@ -68,13 +87,13 @@ Ràng buộc đang được controller kiểm tra:
 - Xóa Sách đã có trong phiếu mượn: bị chặn. Xóa Độc giả đã có phiếu mượn: bị chặn.
 - Mọi thao tác POST đều có `[ValidateAntiForgeryToken]`.
 
-## 5. Hạn chế của lưu trữ bằng tệp
+## 6. Hạn chế của lưu trữ bằng tệp
 
 - Chỉ chạy **một** tiến trình ứng dụng tại một thời điểm (khóa `SemaphoreSlim` chỉ có tác dụng trong một tiến trình).
-- Mỗi lần ghi đều đọc và ghi lại cả 8 tệp, phù hợp với quy mô thư viện nhỏ của đề tài nhưng sẽ chậm khi dữ liệu lớn.
-- Việc đổi tên 8 tệp tạm thành tệp chính không phải một thao tác nguyên tử duy nhất. Nếu máy tắt đúng lúc đó, dữ liệu có thể lệch giữa các tệp.
+- Mỗi lần ghi đều đọc và ghi lại cả 10 tệp, phù hợp với quy mô thư viện nhỏ của đề tài nhưng sẽ chậm khi dữ liệu lớn.
+- Việc đổi tên 10 tệp tạm thành tệp chính không phải một thao tác nguyên tử duy nhất. Nếu máy tắt đúng lúc đó, dữ liệu có thể lệch giữa các tệp.
 
-## 6. Việc để sprint sau
+## 7. Việc để sprint sau
 
 - Tìm kiếm đa tiêu chí (thể loại, năm xuất bản): Sprint 3.
 - Tách `TacGia`, gộp `NguoiDung`, thêm `PhieuTra`: theo [ERD.md](ERD.md), chỉ làm khi cả nhóm thống nhất.

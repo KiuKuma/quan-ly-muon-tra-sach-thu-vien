@@ -998,6 +998,146 @@ main.container {
   background-color: var(--green);
 }
 
+.loan-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0 0 1.25rem;
+}
+
+.loan-nav .active {
+  border-color: var(--green);
+  color: #fff;
+  background: var(--green);
+}
+
+.loan-filter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem;
+}
+
+.loan-filter .form-label {
+  margin-bottom: 0.35rem;
+}
+
+.loan-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.loan-books-heading {
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.borrow-book-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.35fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e6ece8;
+  border-radius: 12px;
+  background: #fbfdfb;
+}
+
+.borrow-book-row > div:nth-child(2) {
+  align-self: start;
+}
+
+.borrow-book-row .remove-book-row {
+  align-self: end;
+}
+
+.book-meta {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.loan-status {
+  display: inline-block;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: #eef4f0;
+  color: #40584b;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.loan-status-QuaHan {
+  background: #fff0ed;
+  color: #a53e2e;
+}
+
+.loan-status-TraMotPhan {
+  background: #fff5df;
+  color: #875f12;
+}
+
+.loan-status-DaTra {
+  background: #e7f5ee;
+  color: #176b54;
+}
+
+.returnable-loans {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.returnable-loan-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem;
+  border: 1px solid #e6ece8;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.returnable-loan-card h2 {
+  margin-bottom: 0.25rem;
+  font-size: 1.05rem;
+}
+
+.return-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.65rem;
+}
+
+.return-book-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.return-book-row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.5fr) minmax(8rem, 0.55fr) minmax(9rem, 0.65fr) minmax(10rem, 0.8fr);
+  align-items: end;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e6ece8;
+  border-radius: 12px;
+  background: #fbfdfb;
+}
+
+.return-book-title {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .form-panel,
 .auth-panel {
   padding: 1.6rem;
@@ -1221,5 +1361,37 @@ main.container {
 
   .page-heading .btn {
     white-space: nowrap;
+  }
+
+  .loan-filter {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .loan-filter-actions {
+    align-items: stretch;
+  }
+
+  .loan-books-heading {
+    align-items: stretch;
+  }
+
+  .borrow-book-row,
+  .return-book-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .remove-book-row {
+    justify-self: start;
+  }
+
+  .returnable-loan-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .return-card-actions {
+    align-items: flex-start;
   }
 }

@@ -22,7 +22,9 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
         "books.txt",
         "staff.txt",
         "loans.txt",
-        "loan-details.txt"
+        "loan-details.txt",
+        "returns.txt",
+        "return-details.txt"
     ];
 
     private readonly string _directoryPath = ResolvePath(environment.ContentRootPath,
@@ -128,7 +130,9 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
             Sach = await ReadLinesAsync<Models.Sach>("books.txt"),
             NhanVien = await ReadLinesAsync<Models.NhanVien>("staff.txt"),
             PhieuMuon = await ReadLinesAsync<Models.PhieuMuon>("loans.txt"),
-            ChiTietPhieuMuon = await ReadLinesAsync<Models.ChiTietPhieuMuon>("loan-details.txt")
+            ChiTietPhieuMuon = await ReadLinesAsync<Models.ChiTietPhieuMuon>("loan-details.txt"),
+            PhieuTra = await ReadLinesAsync<Models.PhieuTra>("returns.txt"),
+            ChiTietPhieuTra = await ReadLinesAsync<Models.ChiTietPhieuTra>("return-details.txt")
         };
     }
 
@@ -144,7 +148,9 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
             ["books.txt"] = SerializeLines(data.Sach),
             ["staff.txt"] = SerializeLines(data.NhanVien),
             ["loans.txt"] = SerializeLines(data.PhieuMuon),
-            ["loan-details.txt"] = SerializeLines(data.ChiTietPhieuMuon)
+            ["loan-details.txt"] = SerializeLines(data.ChiTietPhieuMuon),
+            ["returns.txt"] = SerializeLines(data.PhieuTra),
+            ["return-details.txt"] = SerializeLines(data.ChiTietPhieuTra)
         };
 
         var temporaryPaths = new List<string>();

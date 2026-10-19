@@ -1,0 +1,114 @@
+@model ReturnPageViewModel
+@{
+    ViewData["Title"] = "Trả sách";
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">NGHIỆP VỤ THƯ VIỆN</p>
+        <h1>Trả sách</h1>
+        <p class="text-secondary">Tra cứu phiếu theo mã thẻ độc giả, kiểm tra tình trạng và lập phiếu trả.</p>
+    </div>
+</div>
+<partial name="_LoanNavigation" />
+
+<form asp-action="Return" method="get" class="loan-filter form-panel">
+    <div>
+        <label for="readerId" class="form-label">Mã thẻ độc giả</label>
+        <input id="readerId" name="readerId" value="@Model.FilterReaderId" class="form-control" type="number" min="1" placeholder="Nhập mã độc giả" />
+    </div>
+    <div class="loan-filter-actions">
+        <button type="submit" class="btn btn-primary">Tìm phiếu cần trả</button>
+        <a class="btn btn-outline-secondary" asp-action="Return">Xóa lọc</a>
+    </div>
+</form>
+
+@if (Model.SelectedLoan is not null)
+{
+    var selectedLoan = Model.SelectedLoan;
+    <section class="form-panel form-panel-wide return-panel">
+        <div class="page-heading compact-heading">
+            <div>
+                <p class="eyebrow">PHIẾU MƯỢN PM-@selectedLoan.Id</p>
+                <h2 class="h4">@selectedLoan.ReaderName <span class="text-secondary">· Mã thẻ DG-@selectedLoan.ReaderId</span></h2>
+                <p class="text-secondary">Mượn @selectedLoan.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy") · Hẹn trả @selectedLoan.DueAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
+            </div>
+            <span class="loan-status loan-status-@selectedLoan.StatusCode">@selectedLoan.Status</span>
+        </div>
+
+        <form asp-action="Return" method="post">
+            <input asp-for="Return.LoanId" type="hidden" />
+            <input type="hidden" name="FilterReaderId" value="@Model.FilterReaderId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+            <p class="text-secondary">Nhập số lượng thực tế nhận lại. Sách hư hỏng được ghi nhận trên phiếu nhưng không cộng vào số lượng sẵn có.</p>
+            <div class="return-book-list">
+                @for (var i = 0; i < selectedLoan.Books.Count; i++)
+                {
+                    var book = selectedLoan.Books[i];
+                    var submittedItem = Model.Return.Items.FirstOrDefault(item => item.LoanDetailId == book.LoanDetailId);
+                    <div class="return-book-row">
+                        <input type="hidden" name="Return.Items[@i].LoanDetailId" value="@book.LoanDetailId" />
+                        <div class="return-book-title">
+                            <strong>@book.Title</strong>
+                            <span class="text-secondary">Mượn @book.BorrowedQuantity · Đã trả @book.AlreadyReturned · Còn phải trả @book.OutstandingQuantity</span>
+                        </div>
+                        <div>
+                            <label class="form-label" for="Return_Items_@(i)__Quantity">Số lượng nhận</label>
+                            <input id="Return_Items_@(i)__Quantity" name="Return.Items[@i].Quantity" value="@(submittedItem?.Quantity ?? 0)"
+                                   class="form-control" type="number" min="0" max="@book.OutstandingQuantity" />
+                            <span asp-validation-for="Return.Items[i].Quantity" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label class="form-label" for="Return_Items_@(i)__Condition">Tình trạng</label>
+                            <select id="Return_Items_@(i)__Condition" name="Return.Items[@i].Condition" class="form-select">
+                                <option value="Tot" selected="@(submittedItem?.Condition != "HuHong")">Tốt</option>
+                                <option value="HuHong" selected="@(submittedItem?.Condition == "HuHong")">Hư hỏng</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label" for="Return_Items_@(i)__Note">Ghi chú tình trạng</label>
+                            <input id="Return_Items_@(i)__Note" name="Return.Items[@i].Note" value="@submittedItem?.Note"
+                                   class="form-control" maxlength="300" placeholder="Không bắt buộc" />
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="form-actions mt-4">
+                <button type="submit" class="btn btn-primary">Lập phiếu trả</button>
+                <a class="btn btn-outline-secondary" asp-action="Return" asp-route-readerId="@Model.FilterReaderId">Quay lại</a>
+            </div>
+        </form>
+    </section>
+}
+else if (Model.Loans.TotalCount == 0)
+{
+    <div class="empty-state"><p>Không có phiếu nào còn sách cần trả theo mã thẻ này.</p></div>
+}
+else
+{
+    <div class="returnable-loans">
+        @foreach (var loan in Model.Loans.Items)
+        {
+            <article class="returnable-loan-card">
+                <div>
+                    <p class="eyebrow">PHIẾU MƯỢN PM-@loan.Id · MÃ THẺ DG-@loan.ReaderId</p>
+                    <h2>@loan.ReaderName</h2>
+                    <p class="text-secondary mb-2">Mượn @loan.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy") · Hẹn trả @loan.DueAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
+                    <p class="mb-0">@string.Join(" · ", loan.Books.Select(book => $"{book.Title}: còn {book.OutstandingQuantity}"))</p>
+                </div>
+                <div class="return-card-actions">
+                    <span class="loan-status loan-status-@loan.StatusCode">@loan.Status</span>
+                    <a class="btn btn-primary" asp-action="Return" asp-route-loanId="@loan.Id" asp-route-readerId="@Model.FilterReaderId">Kiểm tra và lập phiếu trả</a>
+                </div>
+            </article>
+        }
+    </div>
+    @if (Model.Loans.TotalPages > 1)
+    {
+        <partial name="_Pagination" model='Model.Loans.CreatePagination(action: "Return", readerId: Model.FilterReaderId)' />
+    }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -30,7 +30,14 @@
                             <li class="nav-item"><a class="nav-link" asp-controller="Sach" asp-action="Index">Sách</a></li>
                             <li class="nav-item"><a class="nav-link" asp-controller="TheLoai" asp-action="Index">Thể loại</a></li>
                             <li class="nav-item"><a class="nav-link" asp-controller="DocGia" asp-action="Index">Độc giả</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="MuonTra" asp-action="Index">Mượn trả</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Mượn trả sách</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="MuonTra" asp-action="Borrow">Mượn sách</a></li>
+                                    <li><a class="dropdown-item" asp-controller="MuonTra" asp-action="Return">Trả sách</a></li>
+                                    <li><a class="dropdown-item" asp-controller="MuonTra" asp-action="Index">Quản lý mượn trả</a></li>
+                                </ul>
+                            </li>
                             <li class="nav-item"><a class="nav-link" asp-controller="BaoCao" asp-action="Index">Báo cáo</a></li>
                             @if (User.IsInRole(LibraryRoles.QuanLy))
                             {
@@ -67,14 +74,6 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
-            @if (TempData["Success"] is string success)
-            {
-                <div class="alert alert-success" role="status">@success</div>
-            }
-            @if (TempData["Error"] is string error)
-            {
-                <div class="alert alert-danger" role="alert">@error</div>
-            }
             @RenderBody()
         </main>
     </div>
@@ -84,6 +83,30 @@
             <span>Hệ thống quản lý thư viện</span>
         </div>
     </footer>
+    <div id="feedback-notices" class="visually-hidden" aria-live="polite">
+        @if (TempData["Success"] is string success)
+        {
+            <span data-feedback-kind="success">@success</span>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <span data-feedback-kind="error">@error</span>
+        }
+    </div>
+    <div class="modal fade" id="feedback-modal" tabindex="-1" aria-labelledby="feedback-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="feedback-modal-title">Thông báo</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body" id="feedback-modal-message"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

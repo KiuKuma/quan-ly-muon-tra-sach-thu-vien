@@ -1,4 +1,10 @@
-{"Id":1,"DocGiaId":3,"NhanVienId":1,"TenTaiKhoanNhanVien":null,"NgayMuon":"2026-10-07T00:00:00Z","HanTra":"2026-10-21T00:00:00Z","TrangThai":"DangMuon"}
+{"Id":1,"DocGiaId":3,"NhanVienId":1,"TenTaiKhoanNhanVien":null,"NgayMuon":"2026-10-07T00:00:00Z","HanTra":"2026-10-21T00:00:00Z","TrangThai":"DaTra"}
 {"Id":2,"DocGiaId":4,"NhanVienId":1,"TenTaiKhoanNhanVien":null,"NgayMuon":"2026-09-16T00:00:00Z","HanTra":"2026-09-30T00:00:00Z","TrangThai":"QuaHan"}
 {"Id":3,"DocGiaId":5,"NhanVienId":1,"TenTaiKhoanNhanVien":null,"NgayMuon":"2026-09-22T00:00:00Z","HanTra":"2026-10-06T00:00:00Z","TrangThai":"DaTra"}
 {"Id":4,"DocGiaId":6,"NhanVienId":3,"TenTaiKhoanNhanVien":null,"NgayMuon":"2026-10-10T00:00:00Z","HanTra":"2026-10-24T00:00:00Z","TrangThai":"DangMuon"}
+{"Id":5,"DocGiaId":1,"NhanVienId":4,"TenTaiKhoanNhanVien":"nhanvien1","NgayMuon":"2026-10-15T00:00:00Z","HanTra":"2026-10-29T00:00:00Z","TrangThai":"DangMuon"}
+{"Id":6,"DocGiaId":1,"NhanVienId":4,"TenTaiKhoanNhanVien":"nhanvien1","NgayMuon":"2026-10-19T00:00:00Z","HanTra":"2026-11-02T00:00:00Z","TrangThai":"DaTra"}
+{"Id":7,"DocGiaId":2,"NhanVienId":5,"TenTaiKhoanNhanVien":"nhanvien2","NgayMuon":"2026-10-19T00:00:00Z","HanTra":"2026-11-02T00:00:00Z","TrangThai":"DangMuon"}
+{"Id":8,"DocGiaId":1,"NhanVienId":5,"TenTaiKhoanNhanVien":"nhanvien2","NgayMuon":"2026-10-19T00:00:00Z","HanTra":"2026-11-02T00:00:00Z","TrangThai":"DangMuon"}
+{"Id":9,"DocGiaId":5,"NhanVienId":4,"TenTaiKhoanNhanVien":"nhanvien1","NgayMuon":"2026-10-19T00:00:00Z","HanTra":"2026-11-02T00:00:00Z","TrangThai":"DangMuon"}
+{"Id":10,"DocGiaId":6,"NhanVienId":5,"TenTaiKhoanNhanVien":"nhanvien2","NgayMuon":"2026-10-19T00:00:00Z","HanTra":"2026-11-02T00:00:00Z","TrangThai":"DangMuon"}

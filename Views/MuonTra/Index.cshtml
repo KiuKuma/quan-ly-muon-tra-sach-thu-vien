@@ -1,86 +1,71 @@
 @model LibraryLoanPageViewModel
 @{
     ViewData["Title"] = "Quản lý mượn trả sách";
+    var pagination = Model.Loans.CreatePagination(readerId: Model.FilterReaderId, status: Model.FilterStatus);
 }
 
 <div class="page-heading">
     <div>
         <p class="eyebrow">NGHIỆP VỤ THƯ VIỆN</p>
         <h1>Quản lý mượn trả sách</h1>
-        <p class="text-secondary">@Model.Loans.TotalCount phiếu mượn</p>
+        <p class="text-secondary">@Model.Loans.TotalCount phiếu phù hợp</p>
     </div>
 </div>
 
-<section class="auth-panel mb-4">
-    <h2 class="h4">Lập phiếu mượn</h2>
-    <form asp-action="Create" method="post" class="form-grid form-grid-two">
-        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-        <div>
-            <label asp-for="NewLoan.ReaderId" class="form-label"></label>
-            <select asp-for="NewLoan.ReaderId" class="form-select">
-                <option value="0">Chọn độc giả</option>
-                @foreach (var reader in Model.Readers)
-                {
-                    <option value="@reader.Id">@reader.Name</option>
-                }
-            </select>
-            <span asp-validation-for="NewLoan.ReaderId" class="text-danger"></span>
-        </div>
-        <div>
-            <label asp-for="NewLoan.BookId" class="form-label"></label>
-            <select asp-for="NewLoan.BookId" class="form-select">
-                <option value="0">Chọn sách</option>
-                @foreach (var book in Model.Books)
-                {
-                    <option value="@book.Id">@book.Name (@book.AvailableCopies bản có sẵn)</option>
-                }
-            </select>
-            <span asp-validation-for="NewLoan.BookId" class="text-danger"></span>
-        </div>
-        <div>
-            <label asp-for="NewLoan.Quantity" class="form-label"></label>
-            <input asp-for="NewLoan.Quantity" class="form-control" min="1" />
-            <span asp-validation-for="NewLoan.Quantity" class="text-danger"></span>
-        </div>
-        <div>
-            <label asp-for="NewLoan.DueAt" class="form-label"></label>
-            <input asp-for="NewLoan.DueAt" class="form-control" />
-            <span asp-validation-for="NewLoan.DueAt" class="text-danger"></span>
-        </div>
-        <button type="submit" class="btn btn-primary">Tạo phiếu mượn</button>
-    </form>
-</section>
+<partial name="_LoanNavigation" />
+
+<form asp-action="Index" method="get" class="loan-filter form-panel">
+    <div>
+        <label for="readerId" class="form-label">Mã thẻ độc giả</label>
+        <input id="readerId" name="readerId" value="@Model.FilterReaderId" class="form-control" type="number" min="1" placeholder="Nhập mã độc giả" />
+    </div>
+    <div>
+        <label for="status" class="form-label">Trạng thái phiếu</label>
+        <select id="status" name="status" class="form-select">
+            <option value="TatCa" selected="@(string.IsNullOrWhiteSpace(Model.FilterStatus) || Model.FilterStatus == "TatCa")">Tất cả</option>
+            <option value="DangMuon" selected="@(Model.FilterStatus == "DangMuon")">Đang mượn</option>
+            <option value="TraMotPhan" selected="@(Model.FilterStatus == "TraMotPhan")">Trả một phần</option>
+            <option value="QuaHan" selected="@(Model.FilterStatus == "QuaHan")">Quá hạn</option>
+            <option value="DaTra" selected="@(Model.FilterStatus == "DaTra")">Đã trả</option>
+        </select>
+    </div>
+    <div class="loan-filter-actions">
+        <button type="submit" class="btn btn-primary">Lọc phiếu</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Xóa lọc</a>
+    </div>
+</form>
 
 @if (Model.Loans.TotalCount == 0)
 {
-    <div class="empty-state"><p>Chưa có phiếu mượn nào.</p></div>
+    <div class="empty-state"><p>Không tìm thấy phiếu mượn hoặc phiếu trả phù hợp.</p></div>
 }
 else
 {
     <div class="table-responsive">
         <table class="table align-middle responsive-data-table">
             <thead>
-                <tr><th>Mã phiếu</th><th>Độc giả</th><th>Sách</th><th>Tài khoản nhân viên</th><th>Ngày mượn</th><th>Hạn trả</th><th>Trạng thái</th><th></th></tr>
+                <tr><th>Mã phiếu mượn</th><th>Mã thẻ</th><th>Độc giả</th><th>Sách</th><th>Ngày mượn</th><th>Hẹn trả</th><th>Trạng thái</th><th>Phiếu trả</th><th>Thao tác</th></tr>
             </thead>
             <tbody>
             @foreach (var loan in Model.Loans.Items)
             {
                 <tr>
-                    <td data-label="Mã phiếu">@loan.Id</td>
+                    <td data-label="Mã phiếu mượn">
+                        <a asp-action="Details" asp-route-id="@loan.Id">PM-@loan.Id</a>
+                    </td>
+                    <td data-label="Mã thẻ">@loan.ReaderId</td>
                     <td data-label="Độc giả">@loan.ReaderName</td>
                     <td data-label="Sách">@loan.Books</td>
-                    <td data-label="Tài khoản nhân viên">@loan.StaffUsername</td>
                     <td data-label="Ngày mượn">@loan.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                    <td data-label="Hạn trả">@loan.DueAt.ToString("dd/MM/yyyy")</td>
-                    <td data-label="Trạng thái">@loan.Status</td>
-                    <td data-label="Thao tác" class="text-end">
-                        @if (loan.Status != "Đã trả")
+                    <td data-label="Hẹn trả">@loan.DueAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    <td data-label="Trạng thái"><span class="loan-status loan-status-@loan.StatusCode">@loan.Status</span></td>
+                    <td data-label="Phiếu trả">@loan.ReturnSlips</td>
+                    <td data-label="Thao tác" class="text-end text-nowrap">
+                        @if (loan.StatusCode is "DangMuon" or "TraMotPhan" or "QuaHan")
                         {
-                            <form asp-action="Return" method="post">
-                                <input type="hidden" name="id" value="@loan.Id" />
-                                <button class="btn btn-sm btn-outline-primary" type="submit">Ghi nhận trả</button>
-                            </form>
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Return" asp-route-loanId="@loan.Id">Lập phiếu trả</a>
                         }
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@loan.Id">Chi tiết</a>
                     </td>
                 </tr>
             }
@@ -90,9 +75,5 @@ else
 }
 @if (Model.Loans.TotalPages > 1)
 {
-    <partial name="_Pagination" model="Model.Loans.CreatePagination()" />
-}
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_Pagination" model="pagination" />
 }
