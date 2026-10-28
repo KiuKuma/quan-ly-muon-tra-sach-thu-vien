@@ -32,6 +32,15 @@ public sealed class LibraryAccountService(
     {
         return store.UpdateAsync(data =>
         {
+            // Chỉ dựng bốn tài khoản mặc định ở lần chạy đầu (chưa có tài khoản nào), hoặc dựng lại
+            // tài khoản Quản lý nếu hệ thống không còn Quản lý nào. Nhờ vậy tài khoản đã bị xóa không
+            // tự quay lại và tài khoản tạo thêm không bị mất mỗi lần khởi động.
+            var firstRun = data.Accounts.Count == 0;
+            var hasManager = data.Accounts.Any(account => account.Roles.Contains(LibraryRoles.QuanLy));
+            var seeds = DefaultAccounts
+                .Where(seed => firstRun || (!hasManager && seed.Role == LibraryRoles.QuanLy))
+                .ToArray();
+
             var existingAccounts = data.Accounts
                 .Where(account => DefaultAccounts.Any(seed =>
                     seed.Username.Equals(account.Username, StringComparison.OrdinalIgnoreCase)))
@@ -43,7 +52,7 @@ public sealed class LibraryAccountService(
             var provisionedAccounts = new List<LibraryAccount>(DefaultAccounts.Length);
             var provisionedProfiles = new List<LibraryUserProfile>(DefaultAccounts.Length);
 
-            foreach (var seed in DefaultAccounts)
+            foreach (var seed in seeds)
             {
                 if (!existingAccounts.TryGetValue(seed.Username, out var account))
                 {
@@ -79,9 +88,87 @@ public sealed class LibraryAccountService(
                 EnsureStaffRecord(data, account, profile);
             }
 
-            data.Accounts = provisionedAccounts;
-            data.Profiles = provisionedProfiles;
+            foreach (var account in provisionedAccounts.Where(item => !data.Accounts.Contains(item)))
+            {
+                data.Accounts.Add(account);
+            }
+
+            foreach (var profile in provisionedProfiles.Where(item => !data.Profiles.Contains(item)))
+            {
+                data.Profiles.Add(profile);
+            }
+
+            // Tài khoản mặc định bị mất hồ sơ thì dựng lại hồ sơ; mọi tài khoản có hồ sơ đều có bản ghi nhân viên.
+            foreach (var account in data.Accounts)
+            {
+                var profile = data.Profiles.FirstOrDefault(item => item.AccountId == account.Id);
+                var seed = DefaultAccounts.FirstOrDefault(item =>
+                    item.Username.Equals(account.Username, StringComparison.OrdinalIgnoreCase));
+                if (profile is null && seed.Username is not null)
+                {
+                    profile = new LibraryUserProfile
+                    {
+                        AccountId = account.Id,
+                        HoTen = seed.Name,
+                        Email = seed.Email,
+                        SoDienThoai = seed.Phone,
+                        DiaChi = seed.Address
+                    };
+                    data.Profiles.Add(profile);
+                }
+
+                if (profile is not null)
+                {
+                    EnsureStaffRecord(data, account, profile);
+                }
+            }
+
             return true;
+        });
+    }
+
+    public Task<AccountDeleteResult> DeleteAccountAsync(string accountId, string? currentAccountId)
+    {
+        return store.UpdateAsync(data =>
+        {
+            var account = data.Accounts.FirstOrDefault(item => item.Id == accountId);
+            if (account is null)
+            {
+                return AccountDeleteResult.NotFound;
+            }
+
+            if (accountId == currentAccountId)
+            {
+                return AccountDeleteResult.CannotDeleteSelf;
+            }
+
+            if (account.Roles.Contains(LibraryRoles.QuanLy) &&
+                !data.Accounts.Any(item => item.Id != accountId && item.Roles.Contains(LibraryRoles.QuanLy)))
+            {
+                return AccountDeleteResult.LastManager;
+            }
+
+                       var staff = data.NhanVien.FirstOrDefault(item => item.IdentityUserId == accountId);
+            if (staff is not null && data.PhieuMuon.Any(loan => loan.NhanVienId == staff.Id))
+            {
+                return AccountDeleteResult.HasLoanHistory;
+            }
+
+            if (staff is not null)
+            {
+                data.NhanVien.Remove(staff);
+            }
+
+            data.Profiles.RemoveAll(item => item.AccountId == accountId);
+            data.Accounts.Remove(account);
+
+            // Giữ lại hồ sơ độc giả (có thể còn lịch sử mượn), chỉ gỡ liên kết với tài khoản đã xóa.
+            foreach (var reader in data.DocGia.Where(item => item.IdentityUserId == accountId))
+            {
+                reader.IdentityUserId = null;
+            }
+
+            return AccountDeleteResult.Success;
         });
     }
 
@@ -214,6 +301,15 @@ public enum ProfileUpdateResult
     Success,
     NotFound,
     DuplicateEmail
+}
+
+public enum AccountDeleteResult
+{
+    Success,
+    NotFound,
+    CannotDeleteSelf,
+    LastManager,
+    HasLoanHistory
 }
 
 public sealed record LoginResult(LoginStatus Status, LibraryAccount? Account);

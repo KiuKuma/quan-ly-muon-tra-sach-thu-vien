@@ -7,5 +7,6 @@ public sealed class AccountSummaryViewModel
     public string HoTen { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? SoDienThoai { get; set; }
+    public string DiaChi { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
 }

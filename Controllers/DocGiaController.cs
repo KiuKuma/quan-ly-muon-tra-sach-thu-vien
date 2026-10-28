@@ -16,11 +16,11 @@ public sealed class DocGiaController(
         return View(await store.ReadAsync(data =>
         {
             var readers = data.DocGia.AsEnumerable();
-            if (!string.IsNullOrWhiteSpace(search))
+            var terms = VietnameseText.SplitTerms(search);
+            if (terms.Length > 0)
             {
-                var term = search.Trim();
-                readers = readers.Where(reader => reader.HoTen.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                                                  reader.Email.Contains(term, StringComparison.OrdinalIgnoreCase));
+                readers = readers.Where(reader => VietnameseText.ContainsAllTerms(
+                    terms, reader.HoTen, reader.Email, reader.SoDienThoai, reader.DiaChi));
             }
 
             return PagedResult<DocGia>.Create(readers.OrderBy(reader => reader.HoTen), page);

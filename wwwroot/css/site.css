@@ -1392,3 +1392,15 @@ main.container {
     align-items: flex-start;
   }
 }
+
+/* Cot dia chi trong bang doc gia / nhan vien */
+.cell-address {
+  max-width: 20rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .cell-address {
+    max-width: none;
+  }
+}
