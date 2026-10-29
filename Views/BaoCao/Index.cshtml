@@ -1,23 +1,195 @@
 @model LibraryDashboardViewModel
 @{
-    ViewData["Title"] = "Báo cáo thống kê";
+    ViewData["Title"] = "Dashboard báo cáo";
+    var onTimeLoans = Math.Max(Model.ActiveLoans - Model.OverdueLoans, 0);
+    var otherLoans = Math.Max(Model.TotalLoans - onTimeLoans - Model.OverdueLoans - Model.ReturnedLoans, 0);
+    int Percent(int count) => Model.TotalLoans == 0 ? 0 : count * 100 / Model.TotalLoans;
 }
 
-<div class="page-heading">
+<section class="dashboard-heading">
     <div>
-        <p class="eyebrow">TỔNG HỢP HOẠT ĐỘNG</p>
-        <h1>Báo cáo thống kê</h1>
-        <p class="text-secondary">Số liệu hiện tại của thư viện</p>
+        <p class="eyebrow">@(Model.IsManager ? "KHÔNG GIAN QUẢN LÝ" : "KHÔNG GIAN NHÂN VIÊN")</p>
+        <h1>@(Model.IsManager ? "Dashboard quản lý thư viện" : "Dashboard nhân viên")</h1>
+        <p class="dashboard-subtitle">Tổng quan tình hình kho sách và hoạt động mượn trả.</p>
     </div>
-</div>
-
-<section class="dashboard-metrics" aria-label="Thống kê thư viện">
-    <div class="metric-item"><span class="metric-value">@Model.BookTitles</span><span class="metric-label">Đầu sách</span></div>
-    <div class="metric-item"><span class="metric-value">@Model.AvailableCopies</span><span class="metric-label">Bản sách còn</span></div>
-    <div class="metric-item"><span class="metric-value">@Model.Categories</span><span class="metric-label">Thể loại</span></div>
-    <div class="metric-item"><span class="metric-value">@Model.Readers</span><span class="metric-label">Độc giả</span></div>
-    <div class="metric-item"><span class="metric-value">@Model.TotalLoans</span><span class="metric-label">Tổng phiếu mượn</span></div>
-    <div class="metric-item"><span class="metric-value">@Model.ActiveLoans</span><span class="metric-label">Đang mượn</span></div>
-    <div class="metric-item metric-alert"><span class="metric-value">@Model.OverdueLoans</span><span class="metric-label">Quá hạn</span></div>
-    <div class="metric-item"><span class="metric-value">@Model.ReturnedLoans</span><span class="metric-label">Đã trả</span></div>
+    <span class="dashboard-date">Số liệu tính theo ngày lập phiếu mượn</span>
 </section>
+
+<form asp-controller="BaoCao" asp-action="Index" method="get" class="report-date-filter">
+    <div>
+        <label for="fromDate" class="form-label">Từ ngày</label>
+        <input id="fromDate" name="fromDate" type="date" class="form-control"
+               value="@Model.FilterStartDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" required />
+    </div>
+    <div>
+        <label for="toDate" class="form-label">Đến ngày</label>
+        <input id="toDate" name="toDate" type="date" class="form-control"
+               value="@Model.FilterEndDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Áp dụng</button>
+    <a class="btn btn-outline-secondary" asp-controller="BaoCao" asp-action="Index">6 tháng gần nhất</a>
+</form>
+
+@if (Model.DateRangeError is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.DateRangeError</div>
+}
+else
+{
+<section class="dashboard-metrics" aria-label="Chỉ số thư viện">
+    <a class="metric-item" asp-controller="Sach" asp-action="Index">
+        <span class="metric-icon metric-icon-books" aria-hidden="true">▤</span>
+        <span class="metric-copy"><span class="metric-value">@Model.BookTitles</span><span class="metric-label">Đầu sách</span></span>
+    </a>
+    <div class="metric-item">
+        <span class="metric-icon metric-icon-copies" aria-hidden="true">▣</span>
+        <span class="metric-copy"><span class="metric-value">@Model.AvailableCopies</span><span class="metric-label">Bản sách đang có</span></span>
+    </div>
+    <a class="metric-item" asp-controller="DocGia" asp-action="Index">
+        <span class="metric-icon metric-icon-readers" aria-hidden="true">♙</span>
+        <span class="metric-copy"><span class="metric-value">@Model.Readers</span><span class="metric-label">Độc giả</span></span>
+    </a>
+    <a class="metric-item" asp-controller="MuonTra" asp-action="Index">
+        <span class="metric-icon metric-icon-loans" aria-hidden="true">↗</span>
+        <span class="metric-copy"><span class="metric-value">@Model.ActiveLoans</span><span class="metric-label">Phiếu đang mượn</span></span>
+    </a>
+    <a class="metric-item metric-alert" asp-controller="MuonTra" asp-action="Index" asp-route-status="QuaHan">
+        <span class="metric-icon metric-icon-overdue" aria-hidden="true">!</span>
+        <span class="metric-copy"><span class="metric-value">@Model.OverdueLoans</span><span class="metric-label">Phiếu quá hạn</span></span>
+    </a>
+    <div class="metric-item">
+        <span class="metric-icon metric-icon-returned" aria-hidden="true">✓</span>
+        <span class="metric-copy"><span class="metric-value">@Model.ReturnedLoans</span><span class="metric-label">Phiếu đã trả</span></span>
+    </div>
+    @if (Model.IsManager)
+    {
+        <a class="metric-item" asp-controller="TaiKhoan" asp-action="Index">
+            <span class="metric-icon metric-icon-staff" aria-hidden="true">♧</span>
+            <span class="metric-copy"><span class="metric-value">@Model.Staff</span><span class="metric-label">Nhân viên</span></span>
+        </a>
+    }
+</section>
+
+<section class="dashboard-actions" aria-label="Truy cập nhanh">
+    <a asp-controller="MuonTra" asp-action="Borrow">+ Lập phiếu mượn</a>
+    <a asp-controller="MuonTra" asp-action="Return">Nhận trả sách</a>
+    <a asp-controller="Sach" asp-action="Index">Tra cứu kho sách <span aria-hidden="true">→</span></a>
+</section>
+
+<section class="report-grid">
+    <article class="report-panel report-panel-monthly">
+        <div class="report-panel-heading">
+            <div><p class="eyebrow">XU HƯỚNG</p><h2>Phiếu mượn theo thời gian</h2></div>
+            <span class="report-caption">@Model.ChartPeriodLabel</span>
+        </div>
+        @if (Model.MonthlyLoans.All(month => month.LoanCount == 0))
+        {
+            <div class="report-empty">Chưa có dữ liệu mượn sách trong khoảng thời gian này.</div>
+        }
+        else
+        {
+            <div class="monthly-chart" role="img" aria-label="Biểu đồ số phiếu mượn theo tháng">
+                @foreach (var month in Model.MonthlyLoans)
+                {
+                    <div class="monthly-chart-column" aria-label="@month.Label: @month.LoanCount phiếu">
+                        <span class="monthly-chart-value">@month.LoanCount</span>
+                        <div class="monthly-chart-track">
+                            <span class="monthly-chart-bar" style="height: @(month.HeightPercent)%"></span>
+                        </div>
+                        <span class="monthly-chart-label">@month.Label</span>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="report-panel">
+        <div class="report-panel-heading">
+            <div><p class="eyebrow">TRẠNG THÁI</p><h2>Tình hình phiếu mượn</h2></div>
+            <span class="report-caption">@Model.TotalLoans phiếu tất cả</span>
+        </div>
+        <div class="loan-breakdown">
+            <div class="loan-breakdown-item">
+                <div class="loan-breakdown-label"><span>Đang trong hạn</span><strong>@onTimeLoans</strong></div>
+                <div class="report-progress"><span class="report-progress-on-time" style="width: @Percent(onTimeLoans)%"></span></div>
+            </div>
+            <div class="loan-breakdown-item">
+                <div class="loan-breakdown-label"><span>Quá hạn</span><strong>@Model.OverdueLoans</strong></div>
+                <div class="report-progress"><span class="report-progress-overdue" style="width: @Percent(Model.OverdueLoans)%"></span></div>
+            </div>
+            <div class="loan-breakdown-item">
+                <div class="loan-breakdown-label"><span>Đã trả</span><strong>@Model.ReturnedLoans</strong></div>
+                <div class="report-progress"><span class="report-progress-returned" style="width: @Percent(Model.ReturnedLoans)%"></span></div>
+            </div>
+            @if (otherLoans > 0)
+            {
+                <div class="loan-breakdown-item">
+                    <div class="loan-breakdown-label"><span>Trạng thái khác</span><strong>@otherLoans</strong></div>
+                    <div class="report-progress"><span class="report-progress-other" style="width: @Percent(otherLoans)%"></span></div>
+                </div>
+            }
+        </div>
+        @if (Model.TotalLoans == 0)
+        {
+            <p class="report-empty">Chưa phát sinh phiếu mượn.</p>
+        }
+    </article>
+
+    <article class="report-panel">
+        <div class="report-panel-heading">
+            <div><p class="eyebrow">ĐƯỢC QUAN TÂM</p><h2>Sách được mượn nhiều</h2></div>
+            <a class="report-panel-link" asp-controller="Sach" asp-action="Index">Danh mục sách →</a>
+        </div>
+        @if (Model.PopularBooks.Count == 0)
+        {
+            <p class="report-empty">Chưa có dữ liệu mượn sách.</p>
+        }
+        else
+        {
+            <ol class="popular-book-list">
+                @foreach (var book in Model.PopularBooks)
+                {
+                    <li>
+                        <div class="popular-book-heading">
+                            <div><strong>@book.Title</strong><span>@book.Author</span></div>
+                            <b>@book.LoanCount bản được mượn</b>
+                        </div>
+                        <div class="report-progress"><span class="report-progress-popular" style="width: @book.SharePercent%"></span></div>
+                    </li>
+                }
+            </ol>
+        }
+    </article>
+
+    <article class="report-panel report-panel-recent">
+        <div class="report-panel-heading">
+            <div><p class="eyebrow">CẬP NHẬT MỚI</p><h2>Phiếu mượn gần đây</h2></div>
+            <a class="report-panel-link" asp-controller="MuonTra" asp-action="Index">Tất cả phiếu →</a>
+        </div>
+        @if (Model.RecentLoans.Count == 0)
+        {
+            <p class="report-empty">Chưa có phiếu mượn nào.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle report-loans-table">
+                    <thead><tr><th>Độc giả</th><th>Ngày mượn</th><th>Hạn trả</th><th>Trạng thái</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var loan in Model.RecentLoans)
+                    {
+                        <tr>
+                            <td data-label="Độc giả" class="fw-semibold">@loan.ReaderName</td>
+                            <td data-label="Ngày mượn">@loan.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td data-label="Hạn trả">@loan.DueAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td data-label="Trạng thái"><span class="loan-status loan-status-@loan.StatusCode">@loan.Status</span></td>
+                            <td data-label="Chi tiết"><a asp-controller="MuonTra" asp-action="Details" asp-route-id="@loan.Id">PM-@loan.Id</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+</section>
+}

@@ -16,11 +16,11 @@ public sealed class DocGiaController(
         return View(await store.ReadAsync(data =>
         {
             var readers = data.DocGia.AsEnumerable();
-            if (!string.IsNullOrWhiteSpace(search))
+            var terms = VietnameseText.SplitTerms(search);
+            if (terms.Length > 0)
             {
-                var term = search.Trim();
-                readers = readers.Where(reader => reader.HoTen.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                                                  reader.Email.Contains(term, StringComparison.OrdinalIgnoreCase));
+                readers = readers.Where(reader => VietnameseText.ContainsAllTerms(
+                    terms, reader.HoTen, reader.Email, reader.SoDienThoai, reader.DiaChi));
             }
 
             return PagedResult<DocGia>.Create(readers.OrderBy(reader => reader.HoTen), page);
@@ -33,11 +33,11 @@ public sealed class DocGiaController(
         return reader is null ? NotFound() : View(reader);
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     public IActionResult Create() => View("Form", new DocGia());
 
     [HttpPost]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("HoTen,Email,SoDienThoai,DiaChi")] DocGia reader)
     {
@@ -73,7 +73,7 @@ public sealed class DocGiaController(
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     public async Task<IActionResult> Edit(int id)
     {
         var reader = await store.ReadAsync(data => data.DocGia.FirstOrDefault(item => item.Id == id));
@@ -81,7 +81,7 @@ public sealed class DocGiaController(
     }
 
     [HttpPost]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("Id,HoTen,Email,SoDienThoai,DiaChi")] DocGia reader)
     {
@@ -141,7 +141,7 @@ public sealed class DocGiaController(
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     public async Task<IActionResult> Delete(int id)
     {
         var reader = await store.ReadAsync(data => data.DocGia.FirstOrDefault(item => item.Id == id));
@@ -149,7 +149,7 @@ public sealed class DocGiaController(
     }
 
     [HttpPost, ActionName("Delete")]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {

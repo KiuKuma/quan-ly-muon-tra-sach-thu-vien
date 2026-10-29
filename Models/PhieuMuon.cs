@@ -25,4 +25,7 @@ public sealed class PhieuMuon
 
     [JsonIgnore]
     public ICollection<ChiTietPhieuMuon> ChiTietPhieuMuon { get; set; } = new List<ChiTietPhieuMuon>();
+
+    [JsonIgnore]
+    public ICollection<PhieuTra> PhieuTra { get; set; } = new List<PhieuTra>();
 }

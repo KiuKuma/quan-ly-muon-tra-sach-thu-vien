@@ -39,6 +39,7 @@ public sealed class SachController(LibraryFileStore store) : Controller
         }));
     }
 
+    [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
         var book = await store.ReadAsync(data =>

@@ -1,0 +1,8 @@
+<nav class="loan-nav" aria-label="Các chức năng mượn trả">
+    <a class="btn btn-outline-secondary @(ViewContext.RouteData.Values["action"]?.ToString() == "Borrow" ? "active" : "")"
+       asp-controller="MuonTra" asp-action="Borrow">Mượn sách</a>
+    <a class="btn btn-outline-secondary @(ViewContext.RouteData.Values["action"]?.ToString() == "Return" ? "active" : "")"
+       asp-controller="MuonTra" asp-action="Return">Trả sách</a>
+    <a class="btn btn-outline-secondary @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+       asp-controller="MuonTra" asp-action="Index">Quản lý mượn trả</a>
+</nav>

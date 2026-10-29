@@ -6,7 +6,7 @@
 
 ## 1. Khảo sát dữ liệu
 
-Đối chiếu `Models/`, `Data/LibraryData.cs`, `Data/LibraryFileStore.cs` và các controller để xác định 8 tập dữ liệu hiện có.
+Đối chiếu `Models/`, `Data/LibraryData.cs`, `Data/LibraryFileStore.cs` và các controller để xác định 10 tập dữ liệu hiện có.
 
 | Tệp trong `database` | Lớp C# | Ý nghĩa |
 |---|---|---|
@@ -18,6 +18,8 @@
 | `books.txt` | `Sach` | Đầu sách và số lượng còn |
 | `loans.txt` | `PhieuMuon` | Phiếu mượn |
 | `loan-details.txt` | `ChiTietPhieuMuon` | Sách và số lượng trên từng phiếu |
+| `returns.txt` | `PhieuTra` | Phiếu trả sách |
+| `return-details.txt` | `ChiTietPhieuTra` | Số lượng, tình trạng và ghi chú từng đầu sách trả |
 
 ## 2. ERD hiện trạng (theo đúng tên trong code)
 
@@ -31,6 +33,9 @@ erDiagram
     NhanVien ||--o{ PhieuMuon : "NhanVienId"
     PhieuMuon ||--|{ ChiTietPhieuMuon : "PhieuMuonId"
     Sach ||--o{ ChiTietPhieuMuon : "SachId"
+    PhieuMuon ||--o{ PhieuTra : "PhieuMuonId"
+    PhieuTra ||--|{ ChiTietPhieuTra : "PhieuTraId"
+    ChiTietPhieuMuon ||--o{ ChiTietPhieuTra : "ChiTietPhieuMuonId"
 
     TaiKhoan {
         string Id PK
@@ -91,6 +96,25 @@ erDiagram
         int PhieuMuonId FK
         int SachId FK
         int SoLuong
+    }
+    PhieuTra {
+        int Id PK
+        int PhieuMuonId FK
+        int NhanVienId FK
+        string TenTaiKhoanNhanVien
+        datetime NgayTra
+        decimal TienPhatDaThanhToan
+        datetime NgayThanhToanTienPhat
+        string TenTaiKhoanThuTienPhat
+    }
+    ChiTietPhieuTra {
+        int Id PK
+        int PhieuTraId FK
+        int ChiTietPhieuMuonId FK
+        int SoLuongTra
+        decimal TienPhat
+        string TinhTrang
+        string GhiChu
     }
 ```
 
@@ -193,6 +217,9 @@ erDiagram
         int PhieuMuonId FK
         int NhanVienId FK
         datetime NgayTra
+        decimal TienPhatDaThanhToan
+        datetime NgayThanhToanTienPhat
+        string TenTaiKhoanThuTienPhat
     }
     ChiTietPhieuTra {
         int Id PK
@@ -200,6 +227,8 @@ erDiagram
         int ChiTietPhieuMuonId FK
         int SoLuongTra
         decimal TienPhat
+        string TinhTrang
+        string GhiChu
     }
 ```
 
@@ -211,7 +240,7 @@ erDiagram
 | 2 | Thêm `NguoiDung` giữ họ tên, email, SĐT, địa chỉ. `DocGia` và `NhanVien` chỉ giữ thông tin riêng và trỏ về `NguoiDung`. Một người vừa là độc giả vừa là nhân viên chỉ có một hồ sơ |
 | 3 | Bỏ `TenTaiKhoanNhanVien` |
 | 4 | Bỏ `TrangThai`. Trạng thái tính từ `HanTra`, ngày hiện tại và tổng `SoLuongTra` so với tổng `SoLuong` |
-| 5 | Thêm `PhieuTra` và `ChiTietPhieuTra`, cho phép trả từng phần. `TienPhat` được lưu vì là số tiền đã chốt tại thời điểm trả, mức phạt đổi sau này không làm sai lịch sử |
+| 5 | Thêm `PhieuTra` và `ChiTietPhieuTra`, cho phép trả từng phần. `TienPhat` được lưu vì là số tiền đã chốt tại thời điểm trả; số đã thu, thời điểm và tài khoản thu được lưu ở `PhieuTra` |
 | 6 | Tách `VaiTro` thành bảng riêng để đổi hoặc mở rộng vai trò mà không sửa cấu trúc |
 
 ### Kiểm tra 3NF
@@ -240,10 +269,10 @@ ERD ở mục 4 là mô hình mục tiêu. Code hiện tại chưa cần đổi 
 | `TheLoai` | `categories.txt` | Giữ nguyên |
 | `Sach`, `TacGia`, `SachTacGia` | `books.txt` | Tách chuỗi `TacGia` |
 | `PhieuMuon`, `ChiTietPhieuMuon` | `loans.txt`, `loan-details.txt` | Bỏ `TrangThai`, `TenTaiKhoanNhanVien` |
-| `PhieuTra`, `ChiTietPhieuTra` | chưa có | Thuộc Sprint 2 (nghiệp vụ trả sách và tính phạt) |
+| `PhieuTra`, `ChiTietPhieuTra` | `returns.txt`, `return-details.txt` | Lưu phiếu trả từng phần, tình trạng, ghi chú, tiền phạt lũy tiến đã chốt và thanh toán |
 
 ## 6. Câu hỏi cần chốt với nhóm
 
 1. **`Sach.SoLuong`:** hiện là số còn lại và bị trừ khi lập phiếu. ERD này giữ nguyên ý nghĩa đó để khớp `MuonTraController`. Nếu muốn tách thành tổng số và số còn lại thì cần thống nhất với Phương Anh (Sprint 2).
-2. **Mức phạt lũy tiến:** dùng hằng số trong code hay bảng quy định riêng (ảnh hưởng `ChiTietPhieuTra.TienPhat`)?
+2. **Mức phạt lũy tiến:** hiện dùng mức trong code đã thống nhất: ngày 1–7 1.000đ/cuốn/ngày; ngày 8–30 2.000đ/cuốn/ngày; từ ngày 31 là 5.000đ/cuốn/ngày.
 3. **Tên vai trò:** thống nhất giữa tài liệu (Thủ thư, Độc giả, Quản trị viên) và code (Quản lý, Nhân viên).

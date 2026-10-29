@@ -1,0 +1,116 @@
+@model LibraryLoanDetailsViewModel
+@{
+    ViewData["Title"] = $"Chi tiết phiếu PM-{Model.Id}";
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">QUẢN LÝ MƯỢN TRẢ</p>
+        <h1>Chi tiết phiếu PM-@Model.Id</h1>
+        <p class="text-secondary">Thông tin mượn, các lần trả và tình trạng tiền phạt của độc giả.</p>
+    </div>
+</div>
+<partial name="_LoanNavigation" />
+
+<section class="form-panel form-panel-wide mb-4">
+    <div class="page-heading compact-heading">
+        <div>
+            <h2 class="h4">@Model.ReaderName <span class="text-secondary">· Mã thẻ DG-@Model.ReaderId</span></h2>
+            <p class="text-secondary mb-1">Nhân viên lập: @Model.StaffUsername</p>
+            <p class="text-secondary mb-0">Ngày mượn @Model.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy") · Hạn trả @Model.DueAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
+        </div>
+        <span class="loan-status loan-status-@Model.StatusCode">@Model.Status</span>
+    </div>
+
+    <div class="alert @(Model.ReaderOutstandingFine > 0 ? "alert-danger" : "alert-success") mt-3 mb-4" role="status">
+        Tổng nợ phạt của độc giả: <strong>@Model.ReaderOutstandingFine.ToString("N0") ₫</strong>
+        @if (Model.ReaderOutstandingFine > 0)
+        {
+            <span> — độc giả cần thanh toán trước khi lập phiếu mượn mới.</span>
+        }
+    </div>
+
+    @if (Model.OutstandingLoanFine > 0)
+    {
+        <div class="alert alert-warning" role="status">
+            Tiền phạt tạm tính của phiếu này đến @DateTime.Today.ToString("dd/MM/yyyy"):
+            <strong>@Model.OutstandingLoanFine.ToString("N0") ₫</strong>.
+            Khoản phạt tiếp tục tăng theo số ngày trễ và được chốt khi lập phiếu trả.
+        </div>
+    }
+
+    <h2 class="h5">Sách trong phiếu</h2>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Tên sách</th><th>Số lượng mượn</th><th>Đã trả</th><th>Còn phải trả</th></tr></thead>
+            <tbody>
+            @foreach (var book in Model.Books)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@book.Quantity</td>
+                    <td>@book.ReturnedQuantity</td>
+                    <td>@book.OutstandingQuantity</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.StatusCode is "DangMuon" or "TraMotPhan" or "QuaHan")
+    {
+        <a class="btn btn-primary" asp-action="Return" asp-route-loanId="@Model.Id" asp-route-readerId="@Model.ReaderId">Lập phiếu trả</a>
+    }
+</section>
+
+<section class="form-panel form-panel-wide">
+    <h2 class="h5">Lịch sử trả sách và tiền phạt</h2>
+    @if (Model.Returns.Count == 0)
+    {
+        <div class="empty-state"><p>Phiếu mượn chưa có lần trả sách nào.</p></div>
+    }
+    else
+    {
+        @foreach (var receipt in Model.Returns)
+        {
+            <article class="returnable-loan-card mb-3">
+                <div class="w-100">
+                    <div class="d-flex flex-wrap justify-content-between gap-2">
+                        <h3 class="h6 mb-0">Phiếu trả PT-@receipt.Id · @receipt.ReturnedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</h3>
+                        <span class="text-secondary">Phạt @receipt.FineAmount.ToString("N0") ₫ · Đã thu @receipt.FinePaid.ToString("N0") ₫</span>
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm align-middle mb-2">
+                            <thead><tr><th>Sách</th><th>Số lượng</th><th>Tình trạng</th><th>Tiền phạt</th><th>Ghi chú</th></tr></thead>
+                            <tbody>
+                            @foreach (var book in receipt.Books)
+                            {
+                                <tr>
+                                    <td>@book.Title</td>
+                                    <td>@book.Quantity</td>
+                                    <td>@(book.Condition == "HuHong" ? "Hư hỏng" : "Tốt")</td>
+                                    <td>@book.FineAmount.ToString("N0") ₫</td>
+                                    <td>@(string.IsNullOrWhiteSpace(book.Note) ? "—" : book.Note)</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (receipt.FineOutstanding > 0)
+                    {
+                        <p class="text-danger mb-2">Còn nợ @receipt.FineOutstanding.ToString("N0") ₫ tiền phạt.</p>
+                        <form asp-action="PayFine" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="returnId" value="@receipt.Id" />
+                            <button type="submit" class="btn btn-sm btn-success">Xác nhận đã thu @receipt.FineOutstanding.ToString("N0") ₫</button>
+                        </form>
+                    }
+                    else if (receipt.FineAmount > 0)
+                    {
+                        <p class="text-success mb-0">Đã thanh toán @receipt.FinePaidAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") bởi @receipt.FinePaidBy.</p>
+                    }
+                </div>
+            </article>
+        }
+    }
+</section>

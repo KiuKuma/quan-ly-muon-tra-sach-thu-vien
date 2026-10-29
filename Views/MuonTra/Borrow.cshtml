@@ -1,0 +1,113 @@
+@model BorrowPageViewModel
+@{
+    ViewData["Title"] = "Mượn sách";
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">NGHIỆP VỤ THƯ VIỆN</p>
+        <h1>Mượn sách</h1>
+        <p class="text-secondary">Chọn độc giả, kiểm tra số lượng sách còn và lập phiếu mượn.</p>
+    </div>
+</div>
+<partial name="_LoanNavigation" />
+
+<section class="form-panel form-panel-wide">
+    <form asp-action="Borrow" method="post" class="form-grid form-grid-two" id="borrow-form">
+        <div asp-validation-summary="ModelOnly" class="text-danger form-span-two" role="alert"></div>
+        <div>
+            <label asp-for="Loan.ReaderId" class="form-label">Mã độc giả</label>
+            <select asp-for="Loan.ReaderId" class="form-select" id="reader-select">
+                <option value="0">Chọn mã độc giả</option>
+                @foreach (var reader in Model.Readers)
+                {
+                    <option value="@reader.Id" data-reader-name="@reader.Name">DG-@reader.Id · @reader.Name</option>
+                }
+            </select>
+            <span asp-validation-for="Loan.ReaderId" class="text-danger"></span>
+        </div>
+        <div>
+            <label class="form-label" for="reader-name">Tên độc giả</label>
+            <input id="reader-name" class="form-control" readonly placeholder="Tự hiển thị theo mã độc giả" />
+        </div>
+        <div>
+            <label asp-for="Loan.BorrowedAt" class="form-label"></label>
+            <input asp-for="Loan.BorrowedAt" class="form-control" type="date" />
+            <span asp-validation-for="Loan.BorrowedAt" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Loan.DueAt" class="form-label"></label>
+            <input asp-for="Loan.DueAt" class="form-control" type="date" />
+            <span asp-validation-for="Loan.DueAt" class="text-danger"></span>
+        </div>
+
+        <div class="form-span-two">
+            <div class="section-heading loan-books-heading">
+                <div><h2 class="h5 mb-0">Sách mượn</h2><p class="text-secondary mb-0">Mã sách, tác giả, nhà xuất bản và số lượng còn tự hiển thị.</p></div>
+                <button class="btn btn-outline-primary" type="button" id="add-book-row">+ Chọn thêm sách</button>
+            </div>
+            <div id="borrow-book-rows">
+                @for (var i = 0; i < Model.Loan.Items.Count; i++)
+                {
+                    <div class="borrow-book-row" data-book-row>
+                        <div>
+                            <label class="form-label" data-book-label for="Loan_Items_@(i)__BookId">Tên sách / mã sách</label>
+                            <select asp-for="Loan.Items[i].BookId" class="form-select book-select" id="Loan_Items_@(i)__BookId">
+                                <option value="0">Chọn sách</option>
+                                @foreach (var book in Model.Books)
+                                {
+                                    <option value="@book.Id" data-title="@book.Name" data-author="@book.Author"
+                                            data-publisher="@book.Publisher" data-available="@book.AvailableCopies">
+                                        SH-@book.Id · @book.Name
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="Loan.Items[i].BookId" class="text-danger"></span>
+                            <div class="book-meta" data-book-meta>Chọn sách để xem thông tin còn lại.</div>
+                        </div>
+                        <div>
+                            <label asp-for="Loan.Items[i].Quantity" class="form-label" data-quantity-label>Số lượng mượn</label>
+                            <input asp-for="Loan.Items[i].Quantity" class="form-control book-quantity" min="1" max="100" />
+                            <span asp-validation-for="Loan.Items[i].Quantity" class="text-danger"></span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger remove-book-row" type="button" aria-label="Bỏ sách này">Bỏ</button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="form-actions form-span-two">
+            <span class="text-secondary">Mã phiếu mượn sẽ được tự động cấp sau khi tạo phiếu.</span>
+            <button type="submit" class="btn btn-primary">Tạo phiếu mượn</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+        </div>
+    </form>
+</section>
+
+<template id="borrow-book-template">
+    <div class="borrow-book-row" data-book-row>
+        <div>
+            <label class="form-label" data-book-label>Tên sách / mã sách</label>
+            <select class="form-select book-select" data-book-select>
+                <option value="0">Chọn sách</option>
+                @foreach (var book in Model.Books)
+                {
+                    <option value="@book.Id" data-title="@book.Name" data-author="@book.Author"
+                            data-publisher="@book.Publisher" data-available="@book.AvailableCopies">
+                        SH-@book.Id · @book.Name
+                    </option>
+                }
+            </select>
+            <div class="book-meta" data-book-meta>Chọn sách để xem thông tin còn lại.</div>
+        </div>
+        <div>
+            <label class="form-label" data-quantity-label>Số lượng mượn</label>
+            <input class="form-control book-quantity" type="number" min="1" max="100" value="1" data-book-quantity />
+        </div>
+        <button class="btn btn-sm btn-outline-danger remove-book-row" type="button" aria-label="Bỏ sách này">Bỏ</button>
+    </div>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

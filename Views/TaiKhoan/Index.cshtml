@@ -13,7 +13,7 @@
 
 <div class="table-responsive">
     <table class="table align-middle responsive-data-table">
-        <thead><tr><th>Tên tài khoản</th><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Vai trò</th><th></th></tr></thead>
+        <thead><tr><th>Tên tài khoản</th><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Địa chỉ</th><th>Vai trò</th><th></th></tr></thead>
         <tbody>
         @foreach (var account in Model.Items)
         {
@@ -22,9 +22,14 @@
                 <td data-label="Họ tên" class="fw-semibold">@account.HoTen</td>
                 <td data-label="Email">@account.Email</td>
                 <td data-label="Điện thoại">@(account.SoDienThoai ?? "—")</td>
+                <td data-label="Địa chỉ" class="cell-address">@(string.IsNullOrWhiteSpace(account.DiaChi) ? "—" : account.DiaChi)</td>
                 <td data-label="Vai trò">@account.Role</td>
-                <td data-label="Thao tác" class="text-end">
+                <td data-label="Thao tác" class="text-end text-nowrap">
                     <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@account.Id">Sửa hồ sơ</a>
+                    @if (account.Id != (string?)ViewBag.CurrentAccountId)
+                    {
+                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@account.Id">Xóa</a>
+                    }
                 </td>
             </tr>
         }

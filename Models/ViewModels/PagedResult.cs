@@ -34,8 +34,15 @@ public sealed class PagedResult<T>
         return new PagedResult<T>(items, safePageNumber, pageSize, records.Count);
     }
 
-    public PaginationViewModel CreatePagination(string? search = null, string action = "Index", int? routeId = null) =>
-        new(PageNumber, TotalPages, search, action, routeId);
+    public PaginationViewModel CreatePagination(
+        string? search = null,
+        string action = "Index",
+        int? routeId = null,
+        int? readerId = null,
+        string? status = null,
+        int? categoryId = null,
+        bool? availableOnly = null) =>
+        new(PageNumber, TotalPages, search, action, routeId, readerId, status, categoryId, availableOnly);
 }
 
 public sealed class PaginationViewModel(
@@ -43,13 +50,21 @@ public sealed class PaginationViewModel(
     int totalPages,
     string? search = null,
     string action = "Index",
-    int? routeId = null)
+    int? routeId = null,
+    int? readerId = null,
+    string? status = null,
+    int? categoryId = null,
+    bool? availableOnly = null)
 {
     public int PageNumber { get; } = pageNumber;
     public int TotalPages { get; } = totalPages;
     public string? Search { get; } = search;
     public string Action { get; } = action;
     public int? RouteId { get; } = routeId;
+    public int? ReaderId { get; } = readerId;
+    public string? Status { get; } = status;
+    public int? CategoryId { get; } = categoryId;
+    public bool? AvailableOnly { get; } = availableOnly;
 
     public IReadOnlyList<int?> VisiblePages
     {

@@ -7,7 +7,7 @@
     <p class="eyebrow">ĐỘC GIẢ</p>
     <div class="page-heading compact-heading">
         <h1>@Model.HoTen</h1>
-        @if (User.IsInRole(LibraryRoles.QuanLy))
+        @if (User.IsInRole(LibraryRoles.QuanLy) || User.IsInRole(LibraryRoles.NhanVien))
         {
             <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa hồ sơ</a>
         }

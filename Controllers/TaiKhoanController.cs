@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using quan_ly_muon_tra_sach_thu_vien.Data;
@@ -24,10 +25,12 @@ public sealed class TaiKhoanController(
                     HoTen = profile?.HoTen ?? string.Empty,
                     Email = profile?.Email ?? string.Empty,
                     SoDienThoai = profile?.SoDienThoai,
+                    DiaChi = profile?.DiaChi ?? string.Empty,
                     Role = account.Roles.FirstOrDefault() ?? string.Empty
                 };
             })
             .ToList());
+        ViewBag.CurrentAccountId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return View(PagedResult<AccountSummaryViewModel>.Create(viewModels, page));
     }
 
@@ -77,6 +80,58 @@ public sealed class TaiKhoanController(
         }
 
         TempData["Success"] = "Đã cập nhật hồ sơ nhân viên.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var model = await store.ReadAsync(data =>
+        {
+            var account = data.Accounts.FirstOrDefault(item => item.Id == id);
+            if (account is null)
+            {
+                return null;
+            }
+
+            var profile = data.Profiles.FirstOrDefault(item => item.AccountId == id);
+            return new AccountSummaryViewModel
+            {
+                Id = account.Id,
+                Username = account.Username,
+                HoTen = profile?.HoTen ?? string.Empty,
+                Email = profile?.Email ?? string.Empty,
+                SoDienThoai = profile?.SoDienThoai,
+                DiaChi = profile?.DiaChi ?? string.Empty,
+                Role = account.Roles.FirstOrDefault() ?? string.Empty
+            };
+        });
+        return model is null ? NotFound() : View(model);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(string id)
+    {
+        var result = await accounts.DeleteAccountAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier));
+        switch (result)
+        {
+            case AccountDeleteResult.NotFound:
+                return NotFound();
+            case AccountDeleteResult.CannotDeleteSelf:
+                TempData["Error"] = "Không thể xóa tài khoản đang đăng nhập.";
+                break;
+            case AccountDeleteResult.LastManager:
+                TempData["Error"] = "Không thể xóa tài khoản Quản lý cuối cùng.";
+                break;
+            case AccountDeleteResult.HasLoanHistory:
+                TempData["Error"] = "Không thể xóa nhân viên đã lập phiếu mượn hoặc phiếu trả.";
+                break;
+            default:
+                TempData["Success"] = "Đã xóa tài khoản nhân viên.";
+                break;
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
