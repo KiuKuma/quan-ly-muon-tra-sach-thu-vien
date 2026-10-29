@@ -23,8 +23,16 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Tổng quan</a>
+                            <a class="nav-link" asp-controller="@(User.Identity?.IsAuthenticated == true ? "Home" : "TraCuu")" asp-action="Index">@(User.Identity?.IsAuthenticated == true ? "Tổng quan" : "Tra cứu sách")</a>
                         </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="TraCuu" asp-action="Index">Tra cứu sách</a></li>
+                        }
+                        @if (User.Identity?.IsAuthenticated != true)
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Đăng nhập nhân viên</a></li>
+                        }
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="Sach" asp-action="Index">Sách</a></li>

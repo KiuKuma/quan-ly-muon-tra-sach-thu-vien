@@ -9,7 +9,7 @@
         <h1>Độc giả</h1>
         <p class="text-secondary">@Model.TotalCount hồ sơ</p>
     </div>
-    @if (User.IsInRole(LibraryRoles.QuanLy))
+    @if (User.IsInRole(LibraryRoles.QuanLy) || User.IsInRole(LibraryRoles.NhanVien))
     {
         <a class="btn btn-primary" asp-action="Create">Thêm độc giả</a>
     }
@@ -44,7 +44,7 @@ else
                     <td data-label="Địa chỉ" class="cell-address">@(string.IsNullOrWhiteSpace(reader.DiaChi) ? "—" : reader.DiaChi)</td>
                     <td data-label="Thao tác" class="text-end text-nowrap">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@reader.Id">Xem</a>
-                        @if (User.IsInRole(LibraryRoles.QuanLy))
+                        @if (User.IsInRole(LibraryRoles.QuanLy) || User.IsInRole(LibraryRoles.NhanVien))
                         {
                             <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@reader.Id">Sửa</a>
                             <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@reader.Id">Xóa</a>

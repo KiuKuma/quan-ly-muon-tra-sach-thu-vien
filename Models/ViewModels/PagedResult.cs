@@ -39,8 +39,10 @@ public sealed class PagedResult<T>
         string action = "Index",
         int? routeId = null,
         int? readerId = null,
-        string? status = null) =>
-        new(PageNumber, TotalPages, search, action, routeId, readerId, status);
+        string? status = null,
+        int? categoryId = null,
+        bool? availableOnly = null) =>
+        new(PageNumber, TotalPages, search, action, routeId, readerId, status, categoryId, availableOnly);
 }
 
 public sealed class PaginationViewModel(
@@ -50,7 +52,9 @@ public sealed class PaginationViewModel(
     string action = "Index",
     int? routeId = null,
     int? readerId = null,
-    string? status = null)
+    string? status = null,
+    int? categoryId = null,
+    bool? availableOnly = null)
 {
     public int PageNumber { get; } = pageNumber;
     public int TotalPages { get; } = totalPages;
@@ -59,6 +63,8 @@ public sealed class PaginationViewModel(
     public int? RouteId { get; } = routeId;
     public int? ReaderId { get; } = readerId;
     public string? Status { get; } = status;
+    public int? CategoryId { get; } = categoryId;
+    public bool? AvailableOnly { get; } = availableOnly;
 
     public IReadOnlyList<int?> VisiblePages
     {

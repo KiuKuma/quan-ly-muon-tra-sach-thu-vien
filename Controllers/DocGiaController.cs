@@ -33,11 +33,11 @@ public sealed class DocGiaController(
         return reader is null ? NotFound() : View(reader);
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     public IActionResult Create() => View("Form", new DocGia());
 
     [HttpPost]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("HoTen,Email,SoDienThoai,DiaChi")] DocGia reader)
     {
@@ -73,7 +73,7 @@ public sealed class DocGiaController(
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     public async Task<IActionResult> Edit(int id)
     {
         var reader = await store.ReadAsync(data => data.DocGia.FirstOrDefault(item => item.Id == id));
@@ -81,7 +81,7 @@ public sealed class DocGiaController(
     }
 
     [HttpPost]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("Id,HoTen,Email,SoDienThoai,DiaChi")] DocGia reader)
     {
@@ -141,7 +141,7 @@ public sealed class DocGiaController(
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     public async Task<IActionResult> Delete(int id)
     {
         var reader = await store.ReadAsync(data => data.DocGia.FirstOrDefault(item => item.Id == id));
@@ -149,7 +149,7 @@ public sealed class DocGiaController(
     }
 
     [HttpPost, ActionName("Delete")]
-    [Authorize(Roles = LibraryRoles.QuanLy)]
+    [Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
