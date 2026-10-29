@@ -33,10 +33,10 @@ Mật khẩu khởi tạo theo thông tin đã yêu cầu và được kiểm tr
 
 ## Vai trò và chức năng
 
-- **Nhân viên**: xem sách, thể loại và độc giả; lập phiếu mượn, ghi nhận trả sách và xem báo cáo thống kê.
-- **Quản lý**: có toàn bộ quyền của nhân viên, được thêm/sửa/xóa sách, thể loại và độc giả, đồng thời xem, sửa hồ sơ và xóa tài khoản nhân viên. Không xóa được tài khoản đang đăng nhập, Quản lý cuối cùng, hoặc nhân viên đã lập phiếu mượn/trả. Nhân viên mới chỉ được tạo qua form đăng ký tài khoản, không thêm trực tiếp ở trang này.
+- **Nhân viên**: xem sách, thể loại; thêm/sửa/xóa độc giả; lập phiếu mượn, ghi nhận trả sách và xem báo cáo thống kê.
+- **Quản lý**: có toàn bộ quyền của nhân viên, được thêm/sửa/xóa sách và thể loại, đồng thời xem, sửa hồ sơ và xóa tài khoản nhân viên. Không xóa được tài khoản đang đăng nhập, Quản lý cuối cùng, hoặc nhân viên đã lập phiếu mượn/trả. Nhân viên mới chỉ được tạo qua form đăng ký tài khoản, không thêm trực tiếp ở trang này.
 - Danh sách độc giả tìm theo tên, email, điện thoại hoặc địa chỉ, không phân biệt hoa thường và dấu tiếng Việt, có thể gõ nhiều từ.
 - Cả hai vai trò có thể cập nhật hồ sơ cá nhân. Tên tài khoản hiển thị trên thanh điều hướng mở hồ sơ và nút thoát.
 - Không có đăng ký công khai hoặc đăng nhập bằng email.
 
-Khi khởi động, ứng dụng bổ sung dữ liệu minh họa sách, thể loại và độc giả còn thiếu. Seeder không ghi đè những bản ghi nghiệp vụ đã có.
+Khi khởi động, ứng dụng bổ sung dữ liệu minh họa sách, thể loại và độc giả còn thiếu. Seeder không ghi đè những bản ghi nghiệp vụ đã có; các địa chỉ giữ chỗ `Dữ liệu minh họa` của độc giả mẫu được thay bằng địa chỉ công cộng có thật tại Hà Nội, còn địa chỉ đã được cập nhật riêng thì được giữ nguyên.

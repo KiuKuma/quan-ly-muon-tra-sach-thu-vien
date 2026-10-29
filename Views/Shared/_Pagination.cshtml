@@ -24,6 +24,16 @@
             routeValues["status"] = Model.Status;
         }
 
+        if (Model.CategoryId.HasValue)
+        {
+            routeValues["categoryId"] = Model.CategoryId.Value;
+        }
+
+        if (Model.AvailableOnly.HasValue)
+        {
+            routeValues["availableOnly"] = Model.AvailableOnly.Value;
+        }
+
         return Url.Action(Model.Action, controller, routeValues) ?? "#";
     }
 }

@@ -27,15 +27,27 @@ public sealed class LibrarySampleDataSeeder(LibraryFileStore store)
 
     private static readonly SampleReader[] SampleReaders =
     [
-        new("Độc giả mẫu - Minh An", "minh.an@example.test", "0900000101", "Dữ liệu minh họa"),
-        new("Độc giả mẫu - Gia Huy", "gia.huy@example.test", "0900000102", "Dữ liệu minh họa"),
-        new("Độc giả mẫu - Thu Hà", "thu.ha@example.test", "0900000103", "Dữ liệu minh họa")
+        new("Độc giả mẫu - Minh An", "minh.an@example.test", "0900000101", "31 Tràng Thi, phường Cửa Nam, Hà Nội"),
+        new("Độc giả mẫu - Gia Huy", "gia.huy@example.test", "0900000102", "1 Đại Cồ Việt, phường Bạch Mai, Hà Nội"),
+        new("Độc giả mẫu - Thu Hà", "thu.ha@example.test", "0900000103", "144 Xuân Thủy, phường Cầu Giấy, Hà Nội")
     ];
 
     public Task SeedAsync()
     {
         return store.UpdateAsync(data =>
         {
+            foreach (var sample in SampleReaders)
+            {
+                var reader = data.DocGia.FirstOrDefault(item =>
+                    item.Email.Equals(sample.Email, StringComparison.OrdinalIgnoreCase));
+                if (reader?.DiaChi != "Dữ liệu minh họa")
+                {
+                    continue;
+                }
+
+                reader.DiaChi = sample.Address;
+            }
+
             foreach (var sample in SampleCategories)
             {
                 if (data.TheLoai.Any(category => category.TenTheLoai.Equals(
