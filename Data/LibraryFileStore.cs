@@ -24,7 +24,10 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
         "loans.txt",
         "loan-details.txt",
         "returns.txt",
-        "return-details.txt"
+        "return-details.txt",
+        "fine-payments.txt",
+        "inventory-adjustments.txt",
+        "settings.txt"
     ];
 
     private readonly string _directoryPath = ResolvePath(environment.ContentRootPath,
@@ -121,6 +124,7 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
 
     private async Task<LibraryData> LoadUnsafeAsync()
     {
+        var settings = await ReadLinesAsync<LibrarySettings>("settings.txt");
         return new LibraryData
         {
             Accounts = await ReadLinesAsync<LibraryAccount>("users.txt"),
@@ -132,7 +136,10 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
             PhieuMuon = await ReadLinesAsync<Models.PhieuMuon>("loans.txt"),
             ChiTietPhieuMuon = await ReadLinesAsync<Models.ChiTietPhieuMuon>("loan-details.txt"),
             PhieuTra = await ReadLinesAsync<Models.PhieuTra>("returns.txt"),
-            ChiTietPhieuTra = await ReadLinesAsync<Models.ChiTietPhieuTra>("return-details.txt")
+            ChiTietPhieuTra = await ReadLinesAsync<Models.ChiTietPhieuTra>("return-details.txt"),
+            FinePayments = await ReadLinesAsync<FinePayment>("fine-payments.txt"),
+            BookInventoryAdjustments = await ReadLinesAsync<BookInventoryAdjustment>("inventory-adjustments.txt"),
+            Settings = settings.FirstOrDefault() ?? new LibrarySettings()
         };
     }
 
@@ -150,7 +157,10 @@ public sealed class LibraryFileStore(IWebHostEnvironment environment, IConfigura
             ["loans.txt"] = SerializeLines(data.PhieuMuon),
             ["loan-details.txt"] = SerializeLines(data.ChiTietPhieuMuon),
             ["returns.txt"] = SerializeLines(data.PhieuTra),
-            ["return-details.txt"] = SerializeLines(data.ChiTietPhieuTra)
+            ["return-details.txt"] = SerializeLines(data.ChiTietPhieuTra),
+            ["fine-payments.txt"] = SerializeLines(data.FinePayments),
+            ["inventory-adjustments.txt"] = SerializeLines(data.BookInventoryAdjustments),
+            ["settings.txt"] = SerializeLines([data.Settings])
         };
 
         var temporaryPaths = new List<string>();

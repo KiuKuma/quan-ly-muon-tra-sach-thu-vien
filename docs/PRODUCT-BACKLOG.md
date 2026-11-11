@@ -31,18 +31,18 @@
 | PB-06 | Là chủ hệ thống, tôi muốn mật khẩu được mã hóa và tài khoản bị khóa tạm sau nhiều lần đăng nhập sai để tăng bảo mật | M | 3 | 1 | PA | Xong (khóa 15 phút sau 5 lần sai) |
 | PB-07 | Là người dùng, tôi muốn chỉ thấy và dùng được các chức năng đúng vai trò của mình | M | 5 | 1 | PA | Xong cho Thủ thư và Quản trị viên |
 | PB-08 | Là người dùng đã đăng nhập, tôi muốn xem và cập nhật hồ sơ cá nhân | S | 2 | 1 | PA | Xong |
-| PB-09 | Là Quản trị viên, tôi muốn xem danh sách tài khoản nhân viên và sửa hồ sơ của họ | S | 3 | 1 | PA | Xong |
+| PB-09 | Là Quản trị viên, tôi muốn sửa hồ sơ, reset mật khẩu, khóa/mở và xóa tài khoản nhân viên | S | 5 | 1 | PA | Xong (xóa bị chặn nếu nhân viên có lịch sử mượn/trả; không tạo tài khoản tại màn này) |
 | PB-10 | Là Độc giả, tôi muốn có tài khoản để đăng nhập và tra cứu sách | S | 5 | 1 hoặc 3 | PA | Chưa (code chưa có vai trò Độc giả và chưa có đăng ký) |
 
 ### Epic 3. Quản lý danh mục
 
 | ID | User Story | Ưu tiên | SP | Sprint | Phụ trách | Trạng thái |
 |---|---|---|---|---|---|---|
-| PB-11 | Là Quản trị viên, tôi muốn thêm, sửa, xóa sách và Thủ thư được xem chi tiết để quản lý kho sách | M | 5 | 1 | QD | Xong |
+| PB-11 | Là Thủ thư, tôi muốn thêm/sửa sách và loại các bản hỏng/mất khỏi tồn kho có ghi lý do | M | 5 | 1 | QD | Xong (giữ đầu sách và lịch sử mượn; ghi nhật ký số bản bị loại) |
 | PB-12 | Là Quản trị viên, tôi muốn thêm, sửa, xóa thể loại để phân loại sách | M | 3 | 1 | QD | Xong |
-| PB-13 | Là Quản trị viên, tôi muốn thêm, sửa, xóa thông tin độc giả để theo dõi người mượn | M | 5 | 1 | QD | Xong |
+| PB-13 | Là Thủ thư, tôi muốn tạo/sửa hồ sơ và gia hạn thẻ độc giả; Quản trị viên có thêm quyền xóa | M | 5 | 1 | QD | Xong |
 | PB-14 | Là Quản trị viên, tôi không muốn xóa nhầm sách, thể loại hoặc độc giả đang được phiếu mượn sử dụng | M | 2 | 1 | QD | Xong |
-| PB-15 | Là Quản trị viên, tôi muốn số lượng sách trong kho luôn khớp với sách đang cho mượn | S | 3 | 2 | PA, QD | Một phần (`SoLuong` vẫn sửa tay được) |
+| PB-15 | Là Thủ thư, tôi muốn điều chỉnh sách hư hỏng/mất với nhật ký số lượng, lý do và người thao tác | S | 3 | 2 | PA, QD | Xong (điều chỉnh tồn sẵn có; phiếu trả lưu tình trạng riêng) |
 
 ### Epic 4. Mượn và trả sách
 
@@ -51,9 +51,9 @@
 | PB-16 | Là Thủ thư, tôi muốn lập phiếu mượn cho độc giả để ghi nhận việc mượn sách | M | 8 | 2 | PA | Một phần (mỗi phiếu hiện chọn một đầu sách) |
 | PB-17 | Là Thủ thư, tôi muốn hệ thống tự trừ số lượng sách khi mượn và cộng lại khi trả | M | 3 | 2 | PA | Xong |
 | PB-18 | Là Thủ thư, tôi muốn xác nhận độc giả trả sách để đóng phiếu mượn | M | 5 | 2 | PA | Một phần (chưa ghi ngày trả thực tế) |
-| PB-19 | Là Thủ thư, tôi muốn hệ thống tự tính tiền phạt lũy tiến khi trả trễ hạn | M | 8 | 2 | PA | Chưa |
-| PB-20 | Là Thủ thư, tôi muốn hệ thống chặn cho mượn khi độc giả còn nợ sách quá hạn hoặc nợ phạt | M | 5 | 2 | QD | Chưa |
-| PB-21 | Là Thủ thư, tôi muốn xem lịch sử mượn trả của từng độc giả | S | 5 | 2 | QD | Chưa |
+| PB-19 | Là Thủ thư, tôi muốn hệ thống tự tính tiền phạt theo quy định và lập phiếu thu khi nhận tiền | M | 8 | 2 | PA | Xong (phạt trễ, hư hỏng/mất, có nhật ký thu) |
+| PB-20 | Là Thủ thư, tôi muốn hệ thống kiểm tra thẻ, nợ quá hạn/phạt và hạn mức trước khi cho mượn | M | 5 | 2 | QD | Xong |
+| PB-21 | Là Thủ thư, tôi muốn xem lịch sử mượn trả và công nợ của từng độc giả | S | 5 | 2 | QD | Xong |
 | PB-22 | Là Thủ thư, tôi muốn có thông báo rõ ràng khi hết sách hoặc độc giả nợ phạt | S | 2 | 2 | HT | Chưa |
 | PB-23 | Là Thủ thư, tôi muốn xem danh sách phiếu mượn kèm trạng thái Đang mượn, Quá hạn, Đã trả | M | 3 | 2 | PA | Xong |
 
@@ -64,11 +64,13 @@
 | PB-24 | Là Thủ thư, tôi muốn tìm sách theo tên hoặc tác giả, tìm độc giả theo tên hoặc email | M | 3 | 1 | QD | Xong |
 | PB-25 | Là Độc giả, tôi muốn tra cứu sách theo nhiều tiêu chí (tên, tác giả, thể loại, năm) để tìm đúng cuốn cần | M | 5 | 3 | QD | Chưa |
 | PB-26 | Là Thủ thư, tôi muốn tìm kiếm không phân biệt dấu tiếng Việt để gõ nhanh hơn | C | 2 | 3 | QD | Chưa |
-| PB-27 | Là Quản trị viên, tôi muốn xem tổng quan: số đầu sách, số bản còn, thể loại, độc giả, phiếu đang mượn, quá hạn | M | 3 | 1 | PA | Xong |
-| PB-28 | Là Quản trị viên, tôi muốn thống kê lượt mượn theo sách và theo thời gian | S | 5 | 3 | QD | Chưa |
-| PB-29 | Là Quản trị viên, tôi muốn xem danh sách sách quá hạn chưa trả | S | 3 | 3 | QD | Chưa (hiện chỉ có số lượng phiếu quá hạn) |
-| PB-30 | Là Quản trị viên, tôi muốn xem thống kê dưới dạng biểu đồ | S | 5 | 3 | QD, HT | Chưa |
+| PB-27 | Là Quản trị viên, tôi muốn xem tổng quan kho sách, độc giả và phiếu đang mượn/quá hạn | M | 3 | 1 | PA | Xong |
+| PB-28 | Là Quản trị viên, tôi muốn xem số phiếu mượn/trả và tiền phạt đã thu theo từng tháng trong năm | S | 5 | 3 | QD | Xong |
+| PB-29 | Là Quản trị viên, tôi muốn xem danh sách phiếu đang quá hạn, độc giả, sách chưa trả và nhân viên lập phiếu | S | 3 | 3 | QD | Xong |
+| PB-30 | Là Quản trị viên, tôi muốn đối soát chi tiết phiếu mượn/trả, tiền phạt và sách bị loại khỏi kho theo ngày | S | 5 | 3 | QD, HT | Xong |
 | PB-31 | Là nhóm phát triển, chúng tôi muốn tối ưu truy vấn và rà soát bảo mật toàn hệ thống | S | 5 | 3 | PA | Chưa |
+| PB-37 | Là Quản trị viên, tôi muốn cấu hình thời hạn/số lượng mượn, mức phạt, độ tuổi và thời hạn thẻ | M | 5 | 2 | PA | Xong |
+| PB-38 | Là Quản trị viên, tôi muốn xem xu hướng mượn/trả, trạng thái phiếu, sách được mượn nhiều và doanh thu tiền phạt theo khoảng ngày | S | 5 | 3 | QD | Xong |
 
 ### Epic 6. Chất lượng và bàn giao
 
@@ -93,8 +95,7 @@
 ## 4. Điểm cần nhóm chốt (ảnh hưởng thứ tự ưu tiên)
 
 1. **Vai trò Độc giả (PB-10, PB-25):** đề cương có phân quyền Độc giả và trang tra cứu cho Độc giả, nhưng code chỉ có Thủ thư và Quản trị viên. Cần chốt có làm đăng nhập cho Độc giả hay không, và làm ở Sprint nào.
-2. **Quy tắc tiền phạt lũy tiến (PB-19):** cần mức phạt theo số ngày trễ.
-3. **Điều kiện chặn mượn (PB-20):** cần chốt "nợ sách" nghĩa là còn phiếu quá hạn chưa trả, và có giới hạn số sách mượn cùng lúc hay không.
+2. **Quy định nghiệp vụ (PB-19, PB-20, PB-37):** đã chọn phạt trễ cố định theo ngày, mặc định 2.000đ/cuốn/ngày; cho phép mượn tiếp nếu không nợ phạt/quá hạn và còn dưới hạn mức 5 bản cùng lúc.
 4. **Tên vai trò:** thống nhất giữa tài liệu (Thủ thư, Quản trị viên) và code (Nhân viên, Quản lý).
-5. **Quyền sửa sách:** commit `f6b0b51` từng cho Nhân viên thêm, sửa, xóa sách, trái với `README.md`, PB-11 và BR-06. Nhánh `feature/sprint1-ra-soat-quang-dung` đưa về chỉ Quản lý; nếu nhóm muốn Nhân viên cũng được sửa sách thì đổi lại `[Authorize]` trong `SachController` và sửa ba tài liệu này.
+5. **Quyền sách:** Nhân viên được thêm/sửa sách và loại bản hỏng/mất khỏi tồn có nhật ký; chỉ Quản trị viên được quản lý thể loại và quy định.
 6. Các mục ghi "Chưa xác nhận" (PB-03, PB-04, PB-32) là sản phẩm của Huy Thành và Quỳnh Anh, chưa thấy trong repo nên cần hai bạn xác nhận.

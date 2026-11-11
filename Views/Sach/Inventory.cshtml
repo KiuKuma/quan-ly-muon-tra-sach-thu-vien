@@ -1,0 +1,71 @@
+@model InventoryAdjustmentPageViewModel
+@{
+    ViewData["Title"] = "Xóa sách khỏi kho";
+}
+
+<section class="form-panel form-panel-wide">
+    <p class="eyebrow">KHO SÁCH · MÃ @Model.Book.Id</p>
+    <h1>Xóa sách khỏi kho</h1>
+    <p class="text-secondary">
+        <strong>@Model.Book.TenSach</strong> · Số bản hiện có: @Model.Book.SoLuong.
+        Chọn lý do và số lượng cần loại khỏi tồn kho. Thông tin sách và lịch sử mượn vẫn được giữ nguyên.
+    </p>
+    <form asp-action="Inventory" asp-route-id="@Model.Book.Id" method="post" class="form-grid">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div>
+            <label asp-for="Adjustment.Type" class="form-label"></label>
+            <select asp-for="Adjustment.Type" class="form-select">
+                <option value="">Chọn loại</option>
+                <option value="HuHong">Hư hỏng</option>
+                <option value="Mat">Mất</option>
+            </select>
+            <span asp-validation-for="Adjustment.Type" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Adjustment.Quantity" class="form-label"></label>
+            <input asp-for="Adjustment.Quantity" class="form-control" type="number" min="1" max="@Model.Book.SoLuong" />
+            <span asp-validation-for="Adjustment.Quantity" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Adjustment.Note" class="form-label"></label>
+            <textarea asp-for="Adjustment.Note" class="form-control" rows="2"></textarea>
+            <span asp-validation-for="Adjustment.Note" class="text-danger"></span>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Xác nhận xóa khỏi kho</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Quay lại</a>
+        </div>
+    </form>
+</section>
+
+<section class="form-panel form-panel-wide mt-4">
+    <h2 class="h5">Lịch sử điều chỉnh gần đây</h2>
+    @if (Model.History.Count == 0)
+    {
+        <p class="text-secondary mb-0">Chưa có điều chỉnh tồn kho.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Ngày</th><th>Số lượng</th><th>Lý do</th><th>Ghi chú</th><th>Nhân viên</th></tr></thead>
+                <tbody>
+                @foreach (var entry in Model.History)
+                {
+                    <tr>
+                        <td>@entry.AdjustedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@entry.Quantity</td>
+                        <td>@entry.Reason</td>
+                        <td>@(entry.Note ?? "—")</td>
+                        <td>@entry.StaffUsername</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

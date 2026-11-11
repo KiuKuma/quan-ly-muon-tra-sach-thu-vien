@@ -48,5 +48,5 @@ Mục 6 và 7 thuộc giao diện (phân công của Huy Thành); sửa nhỏ, n
 | Kiểm tra điều kiện mượn (chặn độc giả đang quá hạn hoặc nợ phạt) | **Chưa có.** `MuonTraController.Create` chỉ kiểm tra có độc giả, có sách, đủ số lượng và hạn trả không ở quá khứ | Sprint 2, Quang Dũng |
 | Lịch sử mượn trả theo từng độc giả | **Chưa có** trang riêng. `MuonTra/Index` chỉ liệt kê toàn bộ phiếu | Sprint 2, Quang Dũng |
 | Ghi ngày trả, tiền phạt trễ hạn | **Chưa có.** `Return` chỉ đặt `TrangThai = "DaTra"` và cộng lại số lượng | Sprint 2, Phương Anh |
-| Báo cáo thống kê | Mới có các con số tổng (`BaoCaoController`). Chưa có lượt mượn theo sách hoặc theo thời gian, danh sách sách quá hạn, biểu đồ | Sprint 3, Quang Dũng |
+| Báo cáo thống kê | Admin xem/in số phiếu mượn, phiếu trả và tiền phạt thực thu theo tháng; top 10 sách theo tổng số bản mượn trong năm | Sprint 3, Quang Dũng |
 | Tìm kiếm đa tiêu chí cho độc giả | Chưa có; hiện chỉ tìm theo tên và tác giả, và chưa có vai trò Độc giả | Sprint 3, Quang Dũng |

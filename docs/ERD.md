@@ -2,11 +2,11 @@
 
 **Người thực hiện:** Đặng Huy Quang Dũng  
 **Cơ sở:** nhánh `develop`, commit `dcc0e3d` (mã nguồn nền của Đỗ Phương Anh)  
-**Lưu trữ:** tệp text JSON Lines trong thư mục `database` (không dùng SQL), xem [CAU-TRUC-DU-LIEU.md](CAU-TRUC-DU-LIEU.md).
+**Lưu trữ:** tệp JSON Lines trong thư mục dữ liệu (không dùng SQL); `LibraryFileStore` tự tạo thêm tệp mới khi nâng cấp dữ liệu.
 
 ## 1. Khảo sát dữ liệu
 
-Đối chiếu `Models/`, `Data/LibraryData.cs`, `Data/LibraryFileStore.cs` và các controller để xác định 10 tập dữ liệu hiện có.
+Đối chiếu `Models/`, `Data/LibraryData.cs`, `Data/LibraryFileStore.cs` và các controller để xác định các tập dữ liệu hiện có.
 
 | Tệp trong `database` | Lớp C# | Ý nghĩa |
 |---|---|---|
@@ -20,6 +20,9 @@
 | `loan-details.txt` | `ChiTietPhieuMuon` | Sách và số lượng trên từng phiếu |
 | `returns.txt` | `PhieuTra` | Phiếu trả sách |
 | `return-details.txt` | `ChiTietPhieuTra` | Số lượng, tình trạng và ghi chú từng đầu sách trả |
+| `fine-payments.txt` | `FinePayment` | Phiếu thu tiền phạt, người thu và thời điểm thu |
+| `inventory-adjustments.txt` | `BookInventoryAdjustment` | Nhật ký sách hư hỏng/mất bị loại khỏi tồn kho |
+| `settings.txt` | `LibrarySettings` | Một bản ghi tham số nghiệp vụ do Quản lý cấu hình |
 
 ## 2. ERD hiện trạng (theo đúng tên trong code)
 
@@ -36,12 +39,15 @@ erDiagram
     PhieuMuon ||--o{ PhieuTra : "PhieuMuonId"
     PhieuTra ||--|{ ChiTietPhieuTra : "PhieuTraId"
     ChiTietPhieuMuon ||--o{ ChiTietPhieuTra : "ChiTietPhieuMuonId"
+    PhieuTra ||--o{ FinePayment : "ReturnId"
+    Sach ||--o{ BookInventoryAdjustment : "BookId"
 
     TaiKhoan {
         string Id PK
         string Username
         string PasswordHash
         string_list Roles
+        bool IsActive
         int FailedLoginAttempts
         datetime LockoutEndUtc
     }
@@ -59,6 +65,8 @@ erDiagram
         string SoDienThoai
         string DiaChi
         datetime NgayDangKy
+        datetime NgaySinh
+        datetime NgayHetHan
         string IdentityUserId FK
     }
     NhanVien {
@@ -89,6 +97,7 @@ erDiagram
         string TenTaiKhoanNhanVien
         datetime NgayMuon
         datetime HanTra
+        decimal MucPhatMoiNgay
         string TrangThai
     }
     ChiTietPhieuMuon {
@@ -116,6 +125,34 @@ erDiagram
         string TinhTrang
         string GhiChu
     }
+    FinePayment {
+        int Id PK
+        int ReturnId FK
+        int LoanId FK
+        int ReaderId FK
+        decimal Amount
+        datetime PaidAt
+        string StaffUsername
+    }
+    BookInventoryAdjustment {
+        int Id PK
+        int BookId FK
+        int Quantity
+        string Reason
+        string Note
+        string StaffUsername
+        datetime AdjustedAt
+    }
+    LibrarySettings {
+        int LoanTermDays
+        int MaxBooksPerReader
+        decimal DailyLateFine
+        decimal DamagedBookFine
+        decimal LostBookFine
+        int ReaderMinimumAge
+        int ReaderMaximumAge
+        int ReaderCardValidityMonths
+    }
 ```
 
 ## 3. Điểm chưa đạt 3NF trong thiết kế hiện trạng
@@ -126,8 +163,8 @@ erDiagram
 | 2 | `HoSo`, `DocGia`, `NhanVien` | `HoTen`, `Email`, `SoDienThoai` lặp ở cả ba nơi khi một người có tài khoản. `DocGiaController.Edit` phải tự đồng bộ sang hồ sơ | 3NF (dữ liệu dư, phụ thuộc bắc cầu qua `IdentityUserId`) |
 | 3 | `PhieuMuon.TenTaiKhoanNhanVien` | Suy ra được từ `NhanVienId` rồi `IdentityUserId` rồi `Username` | 3NF (phụ thuộc bắc cầu) |
 | 4 | `PhieuMuon.TrangThai` | `QuaHan` suy ra từ `HanTra` và ngày hiện tại. `MuonTraController` đã tự tính khi hiển thị, nên giá trị lưu dễ lệch | Thuộc tính suy diễn |
-| 5 | Không có thực thể trả sách | Tài liệu yêu cầu phiếu trả và tiền phạt trễ hạn, nhưng chưa có nơi ghi ngày trả, số lượng trả, tiền phạt | Thiếu thực thể |
-| 6 | `Roles` | Code dùng `Quản lý` và `Nhân viên`. Tài liệu đề cương nêu Thủ thư, Độc giả, Quản trị viên | Chưa thống nhất |
+| 5 | `PhieuTra` còn tổng thanh toán trong khi `FinePayment` lưu từng lần thu | Hai trường tổng thanh toán được giữ để tương thích dữ liệu cũ; dữ liệu mới dùng các bản ghi `FinePayment` làm sổ thu chi tiết | Dư thừa tương thích |
+| 6 | `Roles` dùng `Quản lý` và `Nhân viên` | Tài liệu dùng tên nghiệp vụ `Quản trị viên` và `Thủ thư`; hai cặp tên được ánh xạ tương ứng. Chưa có tài khoản độc giả | Khác tên, không khác quyền |
 
 ## 4. ERD chuẩn 3NF (mục tiêu)
 
@@ -269,10 +306,11 @@ ERD ở mục 4 là mô hình mục tiêu. Code hiện tại chưa cần đổi 
 | `TheLoai` | `categories.txt` | Giữ nguyên |
 | `Sach`, `TacGia`, `SachTacGia` | `books.txt` | Tách chuỗi `TacGia` |
 | `PhieuMuon`, `ChiTietPhieuMuon` | `loans.txt`, `loan-details.txt` | Bỏ `TrangThai`, `TenTaiKhoanNhanVien` |
-| `PhieuTra`, `ChiTietPhieuTra` | `returns.txt`, `return-details.txt` | Lưu phiếu trả từng phần, tình trạng, ghi chú, tiền phạt lũy tiến đã chốt và thanh toán |
+| `PhieuTra`, `ChiTietPhieuTra`, `FinePayment` | `returns.txt`, `return-details.txt`, `fine-payments.txt` | Lưu trả từng phần, tình trạng, tiền phạt đã chốt và từng lần thu |
+| `LibrarySettings`, `BookInventoryAdjustment` | `settings.txt`, `inventory-adjustments.txt` | Quy định vận hành và nhật ký điều chỉnh tồn |
 
 ## 6. Câu hỏi cần chốt với nhóm
 
 1. **`Sach.SoLuong`:** hiện là số còn lại và bị trừ khi lập phiếu. ERD này giữ nguyên ý nghĩa đó để khớp `MuonTraController`. Nếu muốn tách thành tổng số và số còn lại thì cần thống nhất với Phương Anh (Sprint 2).
-2. **Mức phạt lũy tiến:** hiện dùng mức trong code đã thống nhất: ngày 1–7 1.000đ/cuốn/ngày; ngày 8–30 2.000đ/cuốn/ngày; từ ngày 31 là 5.000đ/cuốn/ngày.
-3. **Tên vai trò:** thống nhất giữa tài liệu (Thủ thư, Độc giả, Quản trị viên) và code (Quản lý, Nhân viên).
+2. **Mức phạt:** đã thống nhất thành mức cố định có thể cấu hình theo ngày; mặc định 2.000đ/cuốn/ngày. Mức trên mỗi phiếu được lưu tại thời điểm mượn.
+3. **Tên vai trò:** tài liệu nghiệp vụ dùng Thủ thư/Quản trị viên; code dùng Nhân viên/Quản lý. Chưa có đăng nhập Độc giả.

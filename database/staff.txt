@@ -4,3 +4,5 @@
 {"Id":4,"HoTen":"Trần Gia Hân","Email":"giahan@gmail.com","SoDienThoai":"0901234502","IdentityUserId":"85bbb3bd62c349b5aa193ca094ae3e95"}
 {"Id":5,"HoTen":"Lê Quốc Bảo","Email":"quoc.bao@example.test","SoDienThoai":"0901234503","IdentityUserId":"e984be459f3c42b9b3bccbd972a06b95"}
 {"Id":6,"HoTen":"Phạm Thu Hà","Email":"thu.ha@example.test","SoDienThoai":"0901234504","IdentityUserId":"0c0f9fed8955435b8156aa29430cb7c7"}
+{"Id":7,"HoTen":"kiukuma","Email":"anhkill8a6@gmail.com","SoDienThoai":"0123456789","IdentityUserId":"e47b7e53897242f7a9b7334722769c52"}
+{"Id":8,"HoTen":"hello36","Email":"nhanvien4@gmail.com","SoDienThoai":"0357369489","IdentityUserId":"47298288a4e040f2b3d927be4b864523"}
