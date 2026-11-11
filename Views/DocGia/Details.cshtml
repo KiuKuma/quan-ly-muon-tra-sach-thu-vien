@@ -16,8 +16,17 @@
         <dt>Email</dt><dd>@Model.Email</dd>
         <dt>Số điện thoại</dt><dd>@(Model.SoDienThoai ?? "—")</dd>
         <dt>Địa chỉ</dt><dd>@(Model.DiaChi ?? "—")</dd>
+        <dt>Ngày sinh</dt><dd>@(Model.NgaySinh?.ToLocalTime().ToString("dd/MM/yyyy") ?? "Chưa cập nhật")</dd>
         <dt>Ngày đăng ký</dt><dd>@Model.NgayDangKy.ToLocalTime().ToString("dd/MM/yyyy")</dd>
+        <dt>Thẻ hết hạn</dt><dd>@(Model.NgayHetHan?.ToLocalTime().ToString("dd/MM/yyyy") ?? "Chưa cập nhật") @(Model.NgayHetHan is DateTime expiry && expiry.Date < DateTime.UtcNow.Date ? "(Đã hết hạn)" : "")</dd>
         <dt>Tài khoản đăng nhập</dt><dd>@(Model.IdentityUserId is null ? "Chưa liên kết" : "Đã kích hoạt")</dd>
     </dl>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" asp-action="History" asp-route-id="@Model.Id">Lịch sử mượn trả</a>
+        <form asp-action="RenewCard" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-outline-success">Gia hạn thẻ</button>
+        </form>
+    </div>
     <a class="btn btn-link px-0" asp-action="Index">Quay lại danh sách</a>
 </section>

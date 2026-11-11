@@ -6,7 +6,7 @@
 <section class="auth-panel">
     <p class="eyebrow">QUẢN LÝ / NHÂN SỰ</p>
     <h1>Sửa hồ sơ nhân viên</h1>
-    <p class="text-secondary">Tên tài khoản và mật khẩu đăng nhập không thể chỉnh sửa tại đây.</p>
+    <p class="text-secondary">Chỉ thông tin hồ sơ có thể được cập nhật tại đây. Tên đăng nhập, mật khẩu và vai trò được giữ nguyên.</p>
     <form asp-action="Edit" method="post" class="form-grid">
         <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
         <input type="hidden" name="id" value="@Context.Request.RouteValues["id"]" />

@@ -26,5 +26,13 @@ public sealed class DocGia
     [Display(Name = "Ngày đăng ký")]
     public DateTime NgayDangKy { get; set; } = DateTime.UtcNow;
 
+    [DataType(DataType.Date)]
+    [Display(Name = "Ngày sinh")]
+    public DateTime? NgaySinh { get; set; }
+
+    [DataType(DataType.Date)]
+    [Display(Name = "Thẻ hết hạn")]
+    public DateTime? NgayHetHan { get; set; }
+
     public string? IdentityUserId { get; set; }
 }

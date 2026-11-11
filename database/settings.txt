@@ -1,0 +1,1 @@
+{"LoanTermDays":14,"MaxBooksPerReader":5,"DailyLateFine":2000,"DamagedBookFine":50000,"LostBookFine":100000,"ReaderMinimumAge":6,"ReaderMaximumAge":100,"ReaderCardValidityMonths":12,"UpdatedAt":null,"UpdatedBy":null}

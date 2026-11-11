@@ -13,7 +13,7 @@ Dự án lưu dữ liệu bằng tệp text JSON Lines (mỗi dòng là một b�
 
 | Bước | Thành phần | Việc làm |
 |---|---|---|
-| 1 | `LibraryFileStore.EnsureCreatedAsync()` | Tạo thư mục dữ liệu (`database`) và đủ 10 tệp. Nếu thấy `library.json` cũ thì tách sang các tệp mới |
+| 1 | `LibraryFileStore.EnsureCreatedAsync()` | Tạo thư mục dữ liệu (`database`) và đủ 14 tệp. Nếu thấy `library.json` cũ thì tách sang các tệp mới |
 | 2 | `LibraryAccountService.EnsureDefaultAccountsAsync()` | Bảo đảm có bốn tài khoản ban đầu (`admin`, `nhanvien1`, `nhanvien2`, `nhanvien3`) |
 | 3 | `LibrarySampleDataSeeder.SeedAsync()` | Bổ sung thể loại, sách, độc giả, nhân viên và phiếu mượn mẫu còn thiếu, không ghi đè dữ liệu đã có |
 
@@ -23,16 +23,19 @@ Mọi lần ghi đều đi qua `LibraryFileStore.UpdateAsync`: có khóa `Semaph
 
 | Tệp | Trường | Khóa và ràng buộc |
 |---|---|---|
-| `users.txt` | `Id` (GUID dạng chuỗi), `Username`, `PasswordHash`, `Roles[]`, `FailedLoginAttempts`, `LockoutEndUtc` | PK `Id`; `Username` duy nhất |
+| `users.txt` | `Id` (GUID dạng chuỗi), `Username`, `PasswordHash`, `Roles[]`, `IsActive`, `FailedLoginAttempts`, `LockoutEndUtc` | PK `Id`; `Username` duy nhất |
 | `profiles.txt` | `AccountId`, `HoTen`, `Email`, `SoDienThoai`, `DiaChi` | PK và FK `AccountId` → `users`; `Email` duy nhất |
-| `readers.txt` | `Id`, `HoTen`, `Email`, `SoDienThoai`, `DiaChi`, `NgayDangKy`, `IdentityUserId` | PK `Id`; `Email` duy nhất; FK `IdentityUserId` → `users` (có thể rỗng) |
+| `readers.txt` | `Id`, `HoTen`, `Email`, `SoDienThoai`, `DiaChi`, `NgayDangKy`, `NgaySinh`, `NgayHetHan`, `IdentityUserId` | PK `Id`; `Email` duy nhất; FK `IdentityUserId` → `users` (có thể rỗng) |
 | `staff.txt` | `Id`, `HoTen`, `Email`, `SoDienThoai`, `IdentityUserId` | PK `Id`; FK `IdentityUserId` → `users` |
 | `categories.txt` | `Id`, `TenTheLoai`, `MoTa` | PK `Id`; `TenTheLoai` duy nhất |
 | `books.txt` | `Id`, `TenSach`, `TacGia`, `NhaXuatBan`, `NamXuatBan`, `SoLuong`, `TheLoaiId` | PK `Id`; FK `TheLoaiId` → `categories` (có thể rỗng: sách chưa phân loại) |
-| `loans.txt` | `Id`, `DocGiaId`, `NhanVienId`, `TenTaiKhoanNhanVien`, `NgayMuon`, `HanTra`, `TrangThai` | PK `Id`; FK → `readers`, `staff` |
+| `loans.txt` | `Id`, `DocGiaId`, `NhanVienId`, `TenTaiKhoanNhanVien`, `NgayMuon`, `HanTra`, `MucPhatMoiNgay`, `TrangThai` | PK `Id`; FK → `readers`, `staff`; lưu mức phạt trễ tại thời điểm mượn |
 | `loan-details.txt` | `Id`, `PhieuMuonId`, `SachId`, `SoLuong` | PK `Id`; FK → `loans`, `books` |
 | `returns.txt` | `Id`, `PhieuMuonId`, `NhanVienId`, `TenTaiKhoanNhanVien`, `NgayTra`, `TienPhatDaThanhToan`, `NgayThanhToanTienPhat`, `TenTaiKhoanThuTienPhat` | PK `Id`; FK → `loans`, `staff`; ghi nhận thanh toán tiền phạt theo phiếu trả |
 | `return-details.txt` | `Id`, `PhieuTraId`, `ChiTietPhieuMuonId`, `SoLuongTra`, `TienPhat`, `TinhTrang`, `GhiChu` | PK `Id`; FK → `returns`, `loan-details`; tiền phạt chốt theo từng dòng sách |
+| `fine-payments.txt` | `Id`, `ReturnId`, `LoanId`, `ReaderId`, `Amount`, `PaidAt`, `StaffUsername` | Nhật ký từng lần thu tiền, hỗ trợ thu nhiều lần |
+| `inventory-adjustments.txt` | `Id`, `BookId`, `Quantity`, `Reason`, `Note`, `StaffUsername`, `AdjustedAt` | Nhật ký sách hư hỏng/mất bị loại khỏi số lượng sẵn có |
+| `settings.txt` | Thời hạn/số lượng mượn, mức phạt, tuổi hợp lệ, thời hạn thẻ, người/ngày cập nhật | Một bản ghi quy định, chỉ Quản lý được sửa |
 
 Mã sách (`Id`) kiểu số được cấp tự động bằng `Max(Id) + 1` trong cùng lần ghi; người dùng không nhập mã. Biểu mẫu thêm và sửa sách nhập tên sách, tác giả, thể loại (chọn từ danh sách, không bắt buộc), nhà xuất bản, năm xuất bản và số lượng.
 
@@ -47,53 +50,57 @@ Tệp text không tự kiểm tra khóa ngoại hay tính duy nhất, nên các 
 | Mượn: độc giả và nhân viên hợp lệ, hạn trả không trước ngày mượn, đủ số lượng mọi sách | `MuonTraController.Borrow` |
 | Mượn nhiều đầu sách trên một phiếu, trừ tồn kho theo từng sách | `MuonTraController.Borrow` |
 | Trả: số lượng không vượt số còn mượn; mỗi lần trả tạo phiếu và chi tiết trả | `MuonTraController.Return` |
-| Sách trả tốt được cộng vào tồn kho; sách hư hỏng được lưu tình trạng và không cộng vào số lượng sẵn có | `MuonTraController.Return` |
-| Phạt trễ lũy tiến theo từng cuốn đã trả: 1–7 ngày 1.000đ/ngày; 8–30 ngày 2.000đ/ngày; từ ngày 31 là 5.000đ/ngày | `MuonTraController.Return` |
+| Sách trả tốt được cộng vào tồn kho; sách hư hỏng/mất được lưu tình trạng, phạt và không cộng vào số lượng sẵn có | `MuonTraController.Return` |
+| Phạt trễ cố định theo mức đã chụp trên phiếu mượn; phạt hư hỏng/mất lấy từ quy định hiện hành và được chốt lúc trả | `MuonTraController.Return` |
 | Không tạo phiếu mượn khi độc giả còn tiền phạt chưa thanh toán; xác nhận thu tiền gắn với phiếu trả | `MuonTraController.Borrow`, `MuonTraController.PayFine` |
-| Không tạo phiếu mượn khi độc giả còn bất kỳ sách nào chưa trả, kể cả phiếu còn trong hạn | `MuonTraController.Borrow` |
+| Kiểm tra ngày sinh, thẻ còn hạn, không có sách quá hạn/nợ phạt, và tổng số sách chưa trả không vượt hạn mức | `MuonTraController.Borrow` |
+| Mức mượn mặc định 14 ngày, tối đa 5 bản cùng lúc; mức phạt trễ 2.000đ/ngày; mức hư hỏng/mất 50.000đ/100.000đ; tuổi 6–100; thẻ 12 tháng | `QuyDinhController`, `MuonTraController`, `DocGiaController` |
 | `Sach.TheLoaiId` (nếu có) phải là thể loại có thật | `SachController` (Create, Edit) |
 | `Sach.NamXuatBan` không lớn hơn năm hiện tại | `SachController` (Create, Edit) |
-| Không xóa Sách đã có trong phiếu mượn | `SachController.DeleteConfirmed` |
 | Không xóa Độc giả đã có phiếu mượn | `DocGiaController.DeleteConfirmed` |
 | Không xóa Thể loại còn sách | `TheLoaiController.DeleteConfirmed` |
 | Tra cứu phiếu theo mã độc giả và trạng thái; phân trang danh sách mượn/trả | `MuonTraController.Index` |
 
-Các quy tắc chưa có nơi kiểm tra: `Sach.SoLuong` không âm sau khi Quản lý sửa tay; kiểm tra khóa ngoại khi dữ liệu bị sửa tay trong tệp.
+Số ngày mượn, số bản tối đa, mức phạt, tuổi và thời hạn thẻ do Quản lý cấu hình. `Sach.SoLuong` hiện là số bản sẵn có; điều chỉnh hư hỏng/mất được lưu nhật ký.
 
 ## 4. Quy trình mượn, trả và tra cứu phiếu
 
 - `/MuonTra/Borrow`: chọn mã độc giả, tên được tự hiển thị; nhập ngày mượn/hẹn trả; chọn một hoặc nhiều sách. Mã, tên, tác giả, nhà xuất bản và số lượng còn được hiển thị khi chọn sách. Mã phiếu tự cấp.
-- `/MuonTra/Return`: lọc phiếu còn sách cần trả theo mã thẻ; chọn phiếu, nhập số lượng nhận cho từng đầu sách, tình trạng tốt/hư hỏng và ghi chú. Có thể lập nhiều phiếu trả cho một phiếu mượn (trả từng phần).
+- `/MuonTra/Return`: lọc phiếu còn sách cần xử lý theo mã thẻ; chọn phiếu, nhập số lượng, tình trạng tốt/hư hỏng/mất và ghi chú. Có thể lập nhiều phiếu trả cho một phiếu mượn.
 - `/MuonTra`: tra cứu theo mã thẻ và trạng thái, xem danh sách phân trang; chọn mã phiếu để mở chi tiết sách, số lượng trả, lịch sử phiếu trả, tiền phạt và thanh toán.
-- Khi tạo phiếu, hệ thống chặn nếu còn bất kỳ sách mượn nào chưa trả (kể cả còn trong hạn) hoặc còn nợ phạt.
-- Sách trả tốt được cộng vào số lượng sẵn có. Sách hư hỏng được lưu trong chi tiết phiếu trả nhưng không tăng số lượng có thể cho mượn.
-- Tiền phạt lũy tiến của sách còn đang mượn được tính đến ngày hiện tại để hiển thị và cộng vào nợ độc giả; khi trả một phần, phạt được chốt tại `return-details.txt` cho số sách trả, còn phần chưa trả tiếp tục phát sinh. Không tính hai lần tiền phạt cho sách đã trả. Khoản đã chốt không đổi nếu biểu phí được điều chỉnh; thanh toán được ghi nhận trên phiếu trả, khoản chưa thu chặn lập phiếu mượn mới.
+- Khi tạo phiếu, hệ thống kiểm tra tuổi/thẻ, chặn nợ phạt hoặc sách quá hạn và áp hạn mức tổng số bản đang giữ; sách còn trong hạn vẫn có thể mượn thêm nếu còn hạn mức.
+- Sách trả tốt được cộng vào số lượng sẵn có. Sách hư hỏng/mất không tăng tồn; điều chỉnh sách có sẵn ghi nhật ký lý do, nhân viên, số lượng và thời điểm.
+- Phạt trễ tính theo mức/ngày lưu trên phiếu; phạt hư hỏng/mất được chốt ở chi tiết trả. Thu nhiều lần tạo các bản ghi riêng trong `fine-payments.txt` và có trang in phiếu thu.
 - Các thao tác mượn/trả/thu tiền chạy trong `LibraryFileStore.UpdateAsync`, dùng khóa `SemaphoreSlim` chung để kiểm tra và ghi dữ liệu tuần tự trong một tiến trình. Dự án yêu cầu chỉ chạy một tiến trình ứng dụng tại một thời điểm.
 
 ## 5. Quản lý Sách và Độc giả
 
-Hai chức năng này đã có trong `develop` (`SachController`, `DocGiaController`, các view tương ứng). Thêm, sửa, xóa chỉ dành cho Quản lý; Nhân viên chỉ xem và tìm (khớp `README.md`). Bảng dưới là tài liệu hóa theo đúng hành vi của code.
+Nhân viên được thêm/sửa sách, loại bản hỏng/mất khỏi tồn kho có nhật ký, tạo/sửa/gia hạn hồ sơ độc giả. Quản lý có thêm quyền xóa độc giả và quản lý thể loại.
 
 | Đường dẫn | Chức năng | Vai trò được dùng |
 |---|---|---|
 | `/Sach`, `/DocGia` | Danh sách, tìm theo tên hoặc tác giả (Sách), tên hoặc email (Độc giả) | Nhân viên, Quản lý |
 | `/Sach/Details/{id}`, `/DocGia/Details/{id}` | Xem chi tiết | Nhân viên, Quản lý |
-| `/Sach/Create`, `/DocGia/Create` | Thêm | Quản lý |
-| `/Sach/Edit/{id}`, `/DocGia/Edit/{id}` | Sửa | Quản lý |
-| `/Sach/Delete/{id}`, `/DocGia/Delete/{id}` | Xóa (có trang xác nhận) | Quản lý |
+| `/Sach/Create`, `/DocGia/Create` | Thêm | Nhân viên, Quản lý |
+| `/Sach/Edit/{id}`, `/DocGia/Edit/{id}` | Sửa | Nhân viên, Quản lý |
+| `/Sach/BorrowingHistory?search=...` | Tra cứu lịch sử người mượn theo tên hoặc mã sách | Nhân viên, Quản lý |
+| `/Sach/Inventory/{id}` | Xóa số bản hỏng/mất khỏi tồn kho theo lý do và số lượng, ghi nhật ký; giữ nguyên đầu sách và lịch sử | Nhân viên, Quản lý |
+| `/DocGia/RenewCard/{id}`, `/DocGia/History/{id}` | Gia hạn thẻ, xem lịch sử mượn trả | Nhân viên, Quản lý |
+| `/DocGia/Delete/{id}` | Xóa độc giả chưa có lịch sử mượn (có trang xác nhận) | Nhân viên, Quản lý |
 
 Ràng buộc đang được controller kiểm tra:
 
 - Thêm và sửa Sách: bắt buộc tên sách, tác giả; thể loại không bắt buộc nhưng nếu chọn phải tồn tại; năm xuất bản từ 1450 đến năm hiện tại; số lượng 0 đến 100000. Mã sách được tự cấp. Tên sách, tác giả, nhà xuất bản được cắt khoảng trắng đầu và cuối.
-- Thêm và sửa Độc giả: bắt buộc họ tên, email hợp lệ và không trùng (kể cả với hồ sơ tài khoản). Khi sửa độc giả có tài khoản liên kết thì hồ sơ được cập nhật theo.
-- Xóa Sách đã có trong phiếu mượn: bị chặn. Xóa Độc giả đã có phiếu mượn: bị chặn.
+- Thêm/sửa Độc giả: bắt buộc họ tên, email hợp lệ và không trùng; tạo thẻ cần ngày sinh trong khoảng tuổi cấu hình. Thẻ mới có thời hạn cấu hình; nhân viên có thể gia hạn.
+- Nút Xóa sách chỉ giảm số bản trong kho và lưu lý do, không xóa đầu sách; số lượng giảm không được lớn hơn tồn sẵn có.
+- Xóa Độc giả đã có phiếu mượn: bị chặn.
 - Mọi thao tác POST đều có `[ValidateAntiForgeryToken]`.
 
 ## 6. Hạn chế của lưu trữ bằng tệp
 
 - Chỉ chạy **một** tiến trình ứng dụng tại một thời điểm (khóa `SemaphoreSlim` chỉ có tác dụng trong một tiến trình).
-- Mỗi lần ghi đều đọc và ghi lại cả 10 tệp, phù hợp với quy mô thư viện nhỏ của đề tài nhưng sẽ chậm khi dữ liệu lớn.
-- Việc đổi tên 10 tệp tạm thành tệp chính không phải một thao tác nguyên tử duy nhất. Nếu máy tắt đúng lúc đó, dữ liệu có thể lệch giữa các tệp.
+- Mỗi lần ghi đều đọc và ghi lại cả 14 tệp, phù hợp với quy mô thư viện nhỏ của đề tài nhưng sẽ chậm khi dữ liệu lớn.
+- Việc đổi tên 14 tệp tạm thành tệp chính không phải một thao tác nguyên tử duy nhất. Nếu máy tắt đúng lúc đó, dữ liệu có thể lệch giữa các tệp.
 
 ## 7. Việc để sprint sau
 

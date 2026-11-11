@@ -1,0 +1,21 @@
+@model FinePaymentReceiptViewModel
+@{
+    ViewData["Title"] = $"Phiếu thu PTT-{Model.Id}";
+}
+
+<section class="form-panel receipt-print">
+    <p class="eyebrow">THƯ VIỆN · PHIẾU THU TIỀN PHẠT</p>
+    <h1>Phiếu thu PTT-@Model.Id</h1>
+    <dl class="detail-list">
+        <dt>Mã phiếu trả</dt><dd>PT-@Model.ReturnId</dd>
+        <dt>Mã phiếu mượn</dt><dd>PM-@Model.LoanId</dd>
+        <dt>Độc giả</dt><dd>DG-@Model.ReaderId · @Model.ReaderName</dd>
+        <dt>Số tiền đã thu</dt><dd><strong>@Model.Amount.ToString("N0") ₫</strong></dd>
+        <dt>Ngày thu</dt><dd>@Model.PaidAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+        <dt>Nhân viên thu</dt><dd>@Model.StaffUsername</dd>
+    </dl>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-primary" onclick="window.print()">In phiếu</button>
+        <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.LoanId">Quay lại phiếu mượn</a>
+    </div>
+</section>

@@ -7,10 +7,7 @@
     <p class="eyebrow">SÁCH</p>
     <div class="page-heading compact-heading">
         <h1>@Model.TenSach</h1>
-        @if (User.IsInRole(LibraryRoles.QuanLy))
-        {
-            <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa sách</a>
-        }
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Sửa sách</a>
     </div>
     <dl class="detail-list">
         <dt>Mã sách</dt><dd>@Model.Id</dd>
@@ -20,5 +17,9 @@
         <dt>Năm xuất bản</dt><dd>@(Model.NamXuatBan?.ToString() ?? "—")</dd>
         <dt>Số lượng</dt><dd>@Model.SoLuong</dd>
     </dl>
+    @if (User.IsInRole(LibraryRoles.NhanVien) || User.IsInRole(LibraryRoles.QuanLy))
+    {
+        <a class="btn btn-outline-secondary" asp-action="Inventory" asp-route-id="@Model.Id">Xóa</a>
+    }
     <a class="btn btn-link px-0" asp-action="Index">Quay lại danh sách</a>
 </section>
