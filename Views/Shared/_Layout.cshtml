@@ -20,15 +20,23 @@
                 aria-expanded="false" aria-label="Mở menu điều hướng">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div id="navbarSupportedContent" class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="@(User.Identity?.IsAuthenticated == true ? "Home" : "TraCuu")" asp-action="Index">@(User.Identity?.IsAuthenticated == true ? "Tổng quan" : "Tra cứu sách")</a>
+                        </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Tổng quan</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="TraCuu" asp-action="Index">Tra cứu sách</a></li>
+                        }
+                        @if (User.Identity?.IsAuthenticated != true)
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Đăng nhập nhân viên</a></li>
                         }
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="Sach" asp-action="Index">Sách</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="TheLoai" asp-action="Index">Thể loại</a></li>
                             <li class="nav-item"><a class="nav-link" asp-controller="DocGia" asp-action="Index">Độc giả</a></li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Mượn trả sách</a>
@@ -38,15 +46,14 @@
                                     <li><a class="dropdown-item" asp-controller="MuonTra" asp-action="Index">Quản lý mượn trả</a></li>
                                 </ul>
                             </li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="BaoCao" asp-action="Index">Báo cáo</a></li>
                             @if (User.IsInRole(LibraryRoles.QuanLy))
                             {
-                                <li class="nav-item"><a class="nav-link" asp-controller="BaoCao" asp-action="Index">Thống kê</a></li>
                                 <li class="nav-item"><a class="nav-link" asp-controller="TaiKhoan" asp-action="Index">Nhân viên</a></li>
-                                <li class="nav-item"><a class="nav-link" asp-controller="QuyDinh" asp-action="Index">Quy định</a></li>
                             }
                         }
                     </ul>
-                    <div class="d-flex align-items-center gap-2 @(User.Identity?.IsAuthenticated == true ? "" : "auth-nav-actions")">
+                    <div class="d-flex align-items-center gap-2">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <div class="dropdown">
@@ -66,7 +73,6 @@
                         }
                         else
                         {
-                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="Register">Đăng ký</a>
                             <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="Login">Đăng nhập</a>
                         }
                     </div>
@@ -74,7 +80,7 @@
             </div>
         </nav>
     </header>
-    <div class="container @(ViewData["WideContent"] is true ? "container-wide" : string.Empty)">
+    <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>

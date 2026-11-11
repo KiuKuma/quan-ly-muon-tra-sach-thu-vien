@@ -23,25 +23,10 @@
     </div>
 
     <div class="alert @(Model.ReaderOutstandingFine > 0 ? "alert-danger" : "alert-success") mt-3 mb-4" role="status">
-        <p class="mb-1">Tổng nợ phạt của độc giả: <strong>@Model.ReaderOutstandingFine.ToString("N0") ₫</strong></p>
+        Tổng nợ phạt của độc giả: <strong>@Model.ReaderOutstandingFine.ToString("N0") ₫</strong>
         @if (Model.ReaderOutstandingFine > 0)
         {
-            <p class="mb-1">Độc giả cần thanh toán các khoản đã chốt và trả sách quá hạn trước khi lập phiếu mượn mới.</p>
-            <ul class="mb-0">
-                @if (Model.ReaderConfirmedFineDebt > 0)
-                {
-                    <li>Tiền phạt đã chốt, chưa thu (thu theo từng phiếu trả): <strong>@Model.ReaderConfirmedFineDebt.ToString("N0") ₫</strong></li>
-                }
-                @foreach (var pendingFine in Model.ReaderPendingLoanFines)
-                {
-                    <li>
-                        Phạt tạm tính trên sách chưa trả của
-                        <a asp-action="Details" asp-route-id="@pendingFine.LoanId">PM-@pendingFine.LoanId</a>:
-                        <strong>@pendingFine.Amount.ToString("N0") ₫</strong>
-                        (sẽ chốt khi lập phiếu trả).
-                    </li>
-                }
-            </ul>
+            <span> — độc giả cần thanh toán trước khi lập phiếu mượn mới.</span>
         }
     </div>
 
@@ -103,7 +88,7 @@
                                 <tr>
                                     <td>@book.Title</td>
                                     <td>@book.Quantity</td>
-                                    <td>@(book.Condition switch { "HuHong" => "Hư hỏng", "Mat" => "Báo mất", _ => "Tốt" })</td>
+                                    <td>@(book.Condition == "HuHong" ? "Hư hỏng" : "Tốt")</td>
                                     <td>@book.FineAmount.ToString("N0") ₫</td>
                                     <td>@(string.IsNullOrWhiteSpace(book.Note) ? "—" : book.Note)</td>
                                 </tr>
@@ -117,35 +102,10 @@
                         <form asp-action="PayFine" method="post">
                             <input type="hidden" name="id" value="@Model.Id" />
                             <input type="hidden" name="returnId" value="@receipt.Id" />
-                            <label class="form-label" for="fine-amount-@receipt.Id">Số tiền thu cho phiếu trả PT-@receipt.Id (còn nợ @receipt.FineOutstanding.ToString("N0") ₫)</label>
-                            <div class="d-flex flex-wrap gap-2">
-                                <input id="fine-amount-@receipt.Id" name="amount" class="form-control" type="number"
-                                       min="1" max="@receipt.FineOutstanding" step="1" value="@receipt.FineOutstanding" required />
-                                <button type="submit" class="btn btn-sm btn-success">Lập phiếu thu</button>
-                            </div>
+                            <button type="submit" class="btn btn-sm btn-success">Xác nhận đã thu @receipt.FineOutstanding.ToString("N0") ₫</button>
                         </form>
                     }
-                    @if (receipt.Payments.Count > 0)
-                    {
-                        <div class="table-responsive mt-3">
-                            <table class="table table-sm align-middle">
-                                <thead><tr><th>Phiếu thu</th><th>Ngày thu</th><th>Số tiền</th><th>Nhân viên</th><th></th></tr></thead>
-                                <tbody>
-                                @foreach (var payment in receipt.Payments)
-                                {
-                                    <tr>
-                                        <td>PTT-@payment.Id</td>
-                                        <td>@payment.PaidAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                                        <td>@payment.Amount.ToString("N0") ₫</td>
-                                        <td>@payment.StaffUsername</td>
-                                        <td><a asp-action="FineReceipt" asp-route-paymentId="@payment.Id">In phiếu</a></td>
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else if (receipt.FineAmount > 0 && receipt.FineOutstanding == 0)
+                    else if (receipt.FineAmount > 0)
                     {
                         <p class="text-success mb-0">Đã thanh toán @receipt.FinePaidAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") bởi @receipt.FinePaidBy.</p>
                     }

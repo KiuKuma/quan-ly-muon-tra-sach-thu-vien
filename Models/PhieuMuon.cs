@@ -20,8 +20,6 @@ public sealed class PhieuMuon
     [Display(Name = "Hạn trả")]
     public DateTime HanTra { get; set; } = DateTime.UtcNow.AddDays(14);
 
-    public decimal MucPhatMoiNgay { get; set; } = 2000m;
-
     [StringLength(30)]
     public string TrangThai { get; set; } = "DangMuon";
 

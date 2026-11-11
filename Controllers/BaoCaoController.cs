@@ -1,245 +1,152 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using quan_ly_muon_tra_sach_thu_vien.Data;
-using quan_ly_muon_tra_sach_thu_vien.Models;
 using quan_ly_muon_tra_sach_thu_vien.Models.ViewModels;
 
 namespace quan_ly_muon_tra_sach_thu_vien.Controllers;
 
-[Authorize(Roles = LibraryRoles.QuanLy)]
+[Authorize(Roles = LibraryRoles.NhanVien + "," + LibraryRoles.QuanLy)]
 public sealed class BaoCaoController(LibraryFileStore store) : Controller
 {
-    [HttpGet]
-    public async Task<IActionResult> Index(DateTime? startDate, DateTime? endDate)
+    public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest("Ngày thống kê không hợp lệ.");
-        }
-
-        var today = DateTime.Today;
-        var selectedEndDate = endDate?.Date ?? today;
-        var selectedStartDate = startDate?.Date ?? new DateTime(today.Year, today.Month, 1).AddMonths(-5);
-        if (selectedStartDate < new DateTime(2000, 1, 1) ||
-            selectedEndDate < selectedStartDate ||
-            selectedEndDate > today)
-        {
-            return BadRequest("Khoảng thời gian thống kê không hợp lệ.");
-        }
-
-        var startUtc = DateTime.SpecifyKind(selectedStartDate, DateTimeKind.Local).ToUniversalTime();
-        var endUtc = DateTime.SpecifyKind(selectedEndDate.AddDays(1), DateTimeKind.Local).ToUniversalTime();
-        var model = await store.ReadAsync(data => BuildStatistics(
-            data, selectedStartDate, selectedEndDate, startUtc, endUtc));
-
-        ViewData["WideContent"] = true;
-        return View(model);
-    }
-
-    private static LibraryStatisticsViewModel BuildStatistics(
-        LibraryData data,
-        DateTime startDate,
-        DateTime endDate,
-        DateTime startUtc,
-        DateTime endUtc)
-    {
-        var loansInRange = data.PhieuMuon
-            .Where(loan => loan.NgayMuon >= startUtc && loan.NgayMuon < endUtc)
-            .OrderByDescending(loan => loan.NgayMuon)
-            .ToList();
-        var loanIds = loansInRange.Select(loan => loan.Id).ToHashSet();
-        var receipts = data.PhieuTra.ToDictionary(receipt => receipt.Id);
-        var returnedByDetail = data.ChiTietPhieuTra
-            .Where(detail => receipts.ContainsKey(detail.PhieuTraId))
-            .GroupBy(detail => detail.ChiTietPhieuMuonId)
-            .ToDictionary(group => group.Key, group => group.Sum(detail => detail.SoLuongTra));
-        var loanDetails = data.ChiTietPhieuMuon
-            .Where(detail => loanIds.Contains(detail.PhieuMuonId))
-            .GroupBy(detail => detail.PhieuMuonId)
-            .ToDictionary(group => group.Key, group => group.ToList());
-        var statusCounts = new Dictionary<string, int>(StringComparer.Ordinal)
-        {
-            ["DangMuon"] = 0,
-            ["QuaHan"] = 0,
-            ["TraMotPhan"] = 0,
-            ["DaTra"] = 0
-        };
         var today = DateTime.UtcNow.Date;
-        foreach (var loan in loansInRange)
-        {
-            var details = loanDetails.GetValueOrDefault(loan.Id) ?? [];
-            var status = GetLoanStatus(loan, details, returnedByDetail, today);
-            statusCounts[status.Code]++;
-        }
+        var defaultStartDate = new DateTime(today.Year, today.Month, 1).AddMonths(-5);
+        var endDate = toDate?.Date ?? today;
+        var startDate = fromDate?.Date ?? (toDate.HasValue
+            ? endDate < DateTime.MinValue.AddMonths(5)
+                ? DateTime.MinValue
+                : new DateTime(endDate.Year, endDate.Month, 1).AddMonths(-5)
+            : defaultStartDate);
+        var isManager = User.IsInRole(LibraryRoles.QuanLy);
 
-        var monthlyStatistics = BuildMonthlyStatistics(data, startDate, endDate, startUtc, endUtc);
-        var paymentReturnIds = data.FinePayments.Select(payment => payment.ReturnId).ToHashSet();
-        var totalFineRevenue = CalculateFineRevenue(data, paymentReturnIds, startUtc, endUtc);
-        var books = data.Sach.ToDictionary(book => book.Id);
-        var mostBorrowedBooks = data.ChiTietPhieuMuon
-            .Where(detail => loanIds.Contains(detail.PhieuMuonId) && books.ContainsKey(detail.SachId))
-            .GroupBy(detail => detail.SachId)
-            .Select(group =>
-            {
-                var book = books[group.Key];
-                return new PopularBookStatisticsViewModel
-                {
-                    Title = book.TenSach,
-                    Author = book.TacGia,
-                    CopiesBorrowed = group.Sum(detail => detail.SoLuong),
-                    BorrowingSlips = group.Select(detail => detail.PhieuMuonId).Distinct().Count()
-                };
-            })
-            .OrderByDescending(book => book.CopiesBorrowed)
-            .ThenBy(book => book.Title)
-            .Take(5)
-            .ToList();
-        var readers = data.DocGia.ToDictionary(reader => reader.Id);
-        var returnFineTotals = data.ChiTietPhieuTra
-            .GroupBy(detail => detail.PhieuTraId)
-            .ToDictionary(group => group.Key, group => group.Sum(detail => Math.Max(detail.TienPhat, 0m)));
-        var paymentsByReturn = data.FinePayments
-            .GroupBy(payment => payment.ReturnId)
-            .ToDictionary(group => group.Key, group => group.Sum(payment => Math.Max(payment.Amount, 0m)));
-        var returnsByLoan = data.PhieuTra
-            .GroupBy(receipt => receipt.PhieuMuonId)
-            .ToDictionary(group => group.Key, group => group.ToList());
-        var recentLoans = loansInRange
-            .Take(10)
-            .Select(loan =>
-            {
-                var details = loanDetails.GetValueOrDefault(loan.Id) ?? [];
-                var status = GetLoanStatus(loan, details, returnedByDetail, today);
-                var confirmedFineDebt = returnsByLoan.GetValueOrDefault(loan.Id, [])
-                    .Sum(receipt => Math.Max(
-                        returnFineTotals.GetValueOrDefault(receipt.Id) -
-                        Math.Max(
-                            paymentsByReturn.GetValueOrDefault(receipt.Id),
-                            Math.Max(receipt.TienPhatDaThanhToan, 0m)),
-                        0m));
-                var lateDays = Math.Max((today - loan.HanTra.Date).Days, 0);
-                var accruedFine = details.Sum(detail =>
-                {
-                    var outstandingQuantity = Math.Max(
-                        detail.SoLuong - returnedByDetail.GetValueOrDefault(detail.Id), 0);
-                    return lateDays * loan.MucPhatMoiNgay * outstandingQuantity;
-                });
-                return new RecentLibraryLoanViewModel
-                {
-                    Id = loan.Id,
-                    ReaderName = readers.TryGetValue(loan.DocGiaId, out var reader)
-                        ? reader.HoTen
-                        : $"Độc giả #{loan.DocGiaId}",
-                    BorrowedAt = loan.NgayMuon,
-                    DueAt = loan.HanTra,
-                    Status = status.Label,
-                    StatusCode = status.Code,
-                    FineOutstanding = confirmedFineDebt + accruedFine
-                };
-            })
-            .ToList();
-
-        return new LibraryStatisticsViewModel
+        if (!ModelState.IsValid || startDate > endDate)
         {
-            StartDate = startDate,
-            EndDate = endDate,
-            TotalBorrowedSlips = loansInRange.Count,
-            TotalReturnedSlips = data.PhieuTra.Count(receipt =>
-                receipt.NgayTra >= startUtc && receipt.NgayTra < endUtc),
-            TotalFineRevenue = totalFineRevenue,
-            MonthlyStatistics = monthlyStatistics,
-            StatusStatistics =
-            [
-                new LoanStatusStatisticsViewModel { Code = "DangMuon", Label = "Đang mượn", Count = statusCounts["DangMuon"] },
-                new LoanStatusStatisticsViewModel { Code = "QuaHan", Label = "Quá hạn", Count = statusCounts["QuaHan"] },
-                new LoanStatusStatisticsViewModel { Code = "TraMotPhan", Label = "Trả một phần", Count = statusCounts["TraMotPhan"] },
-                new LoanStatusStatisticsViewModel { Code = "DaTra", Label = "Đã trả", Count = statusCounts["DaTra"] }
-            ],
-            MostBorrowedBooks = mostBorrowedBooks,
-            RecentLoans = recentLoans
-        };
-    }
-
-    private static List<MonthlyLibraryStatisticsViewModel> BuildMonthlyStatistics(
-        LibraryData data,
-        DateTime startDate,
-        DateTime endDate,
-        DateTime rangeStartUtc,
-        DateTime rangeEndUtc)
-    {
-        var months = new List<MonthlyLibraryStatisticsViewModel>();
-        var cursor = new DateTime(startDate.Year, startDate.Month, 1);
-        var lastMonth = new DateTime(endDate.Year, endDate.Month, 1);
-        var paymentReturnIds = data.FinePayments.Select(payment => payment.ReturnId).ToHashSet();
-        while (cursor <= lastMonth)
-        {
-            var nextMonth = cursor.AddMonths(1);
-            var monthStart = DateTime.SpecifyKind(
-                cursor == new DateTime(startDate.Year, startDate.Month, 1) ? startDate : cursor,
-                DateTimeKind.Local).ToUniversalTime();
-            var monthEndDate = nextMonth > endDate ? endDate.AddDays(1) : nextMonth;
-            var monthEnd = DateTime.SpecifyKind(monthEndDate, DateTimeKind.Local).ToUniversalTime();
-            months.Add(new MonthlyLibraryStatisticsViewModel
+            return View(new LibraryDashboardViewModel
             {
-                Label = cursor.ToString("MM/yyyy"),
-                BorrowedSlips = data.PhieuMuon.Count(loan =>
-                    loan.NgayMuon >= monthStart && loan.NgayMuon < monthEnd &&
-                    loan.NgayMuon >= rangeStartUtc && loan.NgayMuon < rangeEndUtc),
-                ReturnedSlips = data.PhieuTra.Count(receipt =>
-                    receipt.NgayTra >= monthStart && receipt.NgayTra < monthEnd &&
-                    receipt.NgayTra >= rangeStartUtc && receipt.NgayTra < rangeEndUtc),
-                FineRevenue = CalculateFineRevenue(data, paymentReturnIds,
-                    Max(monthStart, rangeStartUtc), Min(monthEnd, rangeEndUtc))
+                IsManager = isManager,
+                FilterStartDate = startDate,
+                FilterEndDate = endDate,
+                DateRangeError = !ModelState.IsValid
+                    ? "Ngày lọc không hợp lệ. Vui lòng chọn ngày theo định dạng trên lịch."
+                    : "Ngày bắt đầu không được sau ngày kết thúc."
             });
-            cursor = nextMonth;
         }
 
-        return months;
-    }
+        var firstMonth = new DateTime(startDate.Year, startDate.Month, 1);
+        var monthCount = (endDate.Year - firstMonth.Year) * 12 + endDate.Month - firstMonth.Month + 1;
+        var monthsPerBucket = Math.Max(1, (int)Math.Ceiling(monthCount / 24d));
+        var bucketCount = (monthCount + monthsPerBucket - 1) / monthsPerBucket;
 
-    private static (string Code, string Label) GetLoanStatus(
-        PhieuMuon loan,
-        IReadOnlyCollection<ChiTietPhieuMuon> details,
-        IReadOnlyDictionary<int, int> returnedByDetail,
-        DateTime today)
-    {
-        if (loan.TrangThai == "DaTra" ||
-            (details.Count > 0 && details.All(detail =>
-                returnedByDetail.GetValueOrDefault(detail.Id) >= detail.SoLuong)))
+        var report = await store.ReadAsync(data =>
         {
-            return ("DaTra", "Đã trả");
-        }
+            var filteredLoans = data.PhieuMuon
+                .Where(loan => loan.NgayMuon.Date >= startDate && loan.NgayMuon.Date <= endDate)
+                .ToList();
+            var activeLoans = filteredLoans.Count(loan => loan.TrangThai is "DangMuon" or "QuaHan");
+            var overdueLoans = filteredLoans.Count(loan =>
+                loan.TrangThai == "QuaHan" ||
+                (loan.TrangThai == "DangMuon" && loan.HanTra.Date < today));
 
-        if (loan.HanTra.Date < today)
-        {
-            return ("QuaHan", "Quá hạn");
-        }
+            var monthlyCounts = filteredLoans
+                .GroupBy(loan => ((loan.NgayMuon.Year - firstMonth.Year) * 12 +
+                                  loan.NgayMuon.Month - firstMonth.Month) / monthsPerBucket)
+                .ToDictionary(group => group.Key, group => group.Count());
+            var monthlyLoans = Enumerable.Range(0, bucketCount)
+                .Select(bucket =>
+                {
+                    var firstMonthOffset = bucket * monthsPerBucket;
+                    var lastMonthOffset = Math.Min(firstMonthOffset + monthsPerBucket - 1, monthCount - 1);
+                    var bucketStart = firstMonth.AddMonths(firstMonthOffset);
+                    var bucketEnd = firstMonth.AddMonths(lastMonthOffset);
+                    return new
+                    {
+                        Label = monthsPerBucket == 1
+                            ? bucketStart.ToString("MM/yyyy")
+                            : $"{bucketStart:MM/yyyy}–{bucketEnd:MM/yyyy}",
+                        Count = monthlyCounts.GetValueOrDefault(bucket)
+                    };
+                })
+                .ToList();
+            var maximumMonthlyLoans = monthlyLoans.Max(item => item.Count);
 
-        if (details.Any(detail => returnedByDetail.GetValueOrDefault(detail.Id) > 0))
-        {
-            return ("TraMotPhan", "Trả một phần");
-        }
+            var filteredLoanIds = filteredLoans.Select(loan => loan.Id).ToHashSet();
+            var popularBooks = data.ChiTietPhieuMuon
+                .Where(detail => filteredLoanIds.Contains(detail.PhieuMuonId))
+                .GroupBy(detail => detail.SachId)
+                .Select(group => new
+                {
+                    Book = data.Sach.FirstOrDefault(book => book.Id == group.Key),
+                    LoanCount = group.Sum(detail => detail.SoLuong)
+                })
+                .Where(item => item.Book is not null)
+                .OrderByDescending(item => item.LoanCount)
+                .ThenBy(item => item.Book!.TenSach)
+                .Take(5)
+                .ToList();
+            var maximumBookLoans = popularBooks.Select(item => item.LoanCount).DefaultIfEmpty(0).Max();
 
-        return ("DangMuon", "Đang mượn");
+            return new LibraryDashboardViewModel
+            {
+                IsManager = isManager,
+                FilterStartDate = startDate,
+                FilterEndDate = endDate,
+                ChartPeriodLabel = monthsPerBucket == 1 ? "Theo tháng" : "Gộp theo khoảng tháng",
+                BookTitles = data.Sach.Count,
+                AvailableCopies = data.Sach.Sum(book => book.SoLuong),
+                Categories = data.TheLoai.Count,
+                Readers = data.DocGia.Count,
+                Staff = data.NhanVien.Count,
+                TotalLoans = filteredLoans.Count,
+                ActiveLoans = activeLoans,
+                OverdueLoans = overdueLoans,
+                ReturnedLoans = filteredLoans.Count(loan => loan.TrangThai == "DaTra"),
+                MonthlyLoans = monthlyLoans.Select(item => new MonthlyLoanViewModel
+                {
+                    Label = item.Label,
+                    LoanCount = item.Count,
+                    HeightPercent = maximumMonthlyLoans == 0 || item.Count == 0
+                        ? 0
+                        : Math.Max(10, item.Count * 100 / maximumMonthlyLoans)
+                }).ToList(),
+                PopularBooks = popularBooks.Select(item => new PopularBookViewModel
+                {
+                    Title = item.Book!.TenSach,
+                    Author = item.Book.TacGia,
+                    LoanCount = item.LoanCount,
+                    SharePercent = maximumBookLoans == 0 ? 0 : item.LoanCount * 100 / maximumBookLoans
+                }).ToList(),
+                RecentLoans = filteredLoans
+                    .OrderByDescending(loan => loan.NgayMuon)
+                    .ThenByDescending(loan => loan.Id)
+                    .Take(6)
+                    .Select(loan =>
+                    {
+                        var statusCode = loan.TrangThai == "DaTra"
+                            ? "DaTra"
+                            : loan.TrangThai == "QuaHan" || loan.HanTra.Date < today
+                                ? "QuaHan"
+                                : "DangMuon";
+                        return new RecentLoanViewModel
+                        {
+                            Id = loan.Id,
+                            ReaderName = data.DocGia.FirstOrDefault(reader => reader.Id == loan.DocGiaId)?.HoTen
+                                ?? $"Độc giả #{loan.DocGiaId}",
+                            BorrowedAt = loan.NgayMuon,
+                            DueAt = loan.HanTra,
+                            StatusCode = statusCode,
+                            Status = statusCode switch
+                            {
+                                "DaTra" => "Đã trả",
+                                "QuaHan" => "Quá hạn",
+                                _ => "Đang mượn"
+                            }
+                        };
+                    })
+                    .ToList()
+            };
+        });
+
+        return View(report);
     }
-
-    private static decimal CalculateFineRevenue(
-        LibraryData data,
-        HashSet<int> paymentReturnIds,
-        DateTime start,
-        DateTime end)
-    {
-        var recordedPayments = data.FinePayments
-            .Where(payment => payment.PaidAt >= start && payment.PaidAt < end)
-            .Sum(payment => payment.Amount);
-        var legacyPayments = data.PhieuTra
-            .Where(receipt => !paymentReturnIds.Contains(receipt.Id) &&
-                receipt.NgayThanhToanTienPhat is DateTime paidAt && paidAt >= start && paidAt < end &&
-                receipt.TienPhatDaThanhToan > 0)
-            .Sum(receipt => receipt.TienPhatDaThanhToan);
-        return recordedPayments + legacyPayments;
-    }
-
-    private static DateTime Max(DateTime first, DateTime second) => first >= second ? first : second;
-    private static DateTime Min(DateTime first, DateTime second) => first <= second ? first : second;
 }

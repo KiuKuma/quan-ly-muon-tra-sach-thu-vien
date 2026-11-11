@@ -1,0 +1,93 @@
+@model LibraryCatalogViewModel
+@{
+    ViewData["Title"] = "Tra cứu sách";
+}
+
+<section class="catalog-heading">
+    <p class="eyebrow">DANH MỤC THƯ VIỆN</p>
+    <h1>Tra cứu sách</h1>
+    <p>Tìm nhanh theo tên sách, tác giả, nhà xuất bản hoặc thể loại.</p>
+</section>
+
+<form asp-action="Index" method="get" class="catalog-search">
+    <div class="catalog-search-input">
+        <label for="search" class="form-label">Từ khóa</label>
+        <input id="search" name="search" value="@Model.Search" class="form-control"
+               placeholder="Ví dụ: lập trình, Nguyễn Nhật Ánh..." />
+    </div>
+    <div>
+        <label for="categoryId" class="form-label">Thể loại</label>
+        <select id="categoryId" name="categoryId" class="form-select">
+            <option value="">Tất cả thể loại</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.CategoryId == category.Id)">
+                    @category.Name (@category.BookCount)
+                </option>
+            }
+        </select>
+    </div>
+    <label class="catalog-available-filter">
+        <input class="form-check-input" type="checkbox" name="availableOnly" value="true"
+               checked="@Model.AvailableOnly" />
+        <span>Chỉ hiện sách còn bản</span>
+    </label>
+    <button type="submit" class="btn btn-primary">Tra cứu</button>
+    @if (!string.IsNullOrWhiteSpace(Model.Search) || Model.CategoryId.HasValue || Model.AvailableOnly)
+    {
+        <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
+    }
+</form>
+
+<div class="catalog-results-heading">
+    <div>
+        <h2>Kết quả tra cứu</h2>
+        <p class="text-secondary mb-0">@Model.Books.TotalCount đầu sách phù hợp</p>
+    </div>
+    <span class="catalog-results-count">Trang @Model.Books.PageNumber / @Math.Max(Model.Books.TotalPages, 1)</span>
+</div>
+
+@if (Model.Books.TotalCount == 0)
+{
+    <div class="empty-state">
+        <h2>Chưa tìm thấy sách phù hợp</h2>
+        <p class="text-secondary mb-0">Thử từ khóa khác hoặc bỏ bớt bộ lọc để xem thêm kết quả.</p>
+    </div>
+}
+else
+{
+    <section class="catalog-grid" aria-label="Danh sách sách">
+        @foreach (var book in Model.Books.Items)
+        {
+            <article class="catalog-card">
+                <div class="catalog-card-top">
+                    <span class="catalog-category">@book.Category</span>
+                    <span class="catalog-stock @(book.AvailableCopies > 0 ? "catalog-stock-in" : "catalog-stock-out")">
+                        @(book.AvailableCopies > 0 ? $"Còn {book.AvailableCopies} bản" : "Tạm hết")
+                    </span>
+                </div>
+                <h3>@book.Title</h3>
+                <p class="catalog-author">Tác giả: @book.Author</p>
+                <dl class="catalog-book-meta">
+                    @if (!string.IsNullOrWhiteSpace(book.Publisher))
+                    {
+                        <div><dt>Nhà xuất bản</dt><dd>@book.Publisher</dd></div>
+                    }
+                    @if (book.PublishedYear.HasValue)
+                    {
+                        <div><dt>Năm xuất bản</dt><dd>@book.PublishedYear</dd></div>
+                    }
+                </dl>
+                <a class="catalog-details-link" asp-controller="Sach" asp-action="Details" asp-route-id="@book.Id">
+                    Xem thông tin sách <span aria-hidden="true">→</span>
+                </a>
+            </article>
+        }
+    </section>
+}
+
+@if (Model.Books.TotalPages > 1)
+{
+    <partial name="_Pagination" model="Model.Books.CreatePagination(
+        Model.Search, categoryId: Model.CategoryId, availableOnly: Model.AvailableOnly ? true : null)" />
+}

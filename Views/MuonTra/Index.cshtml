@@ -1,7 +1,6 @@
 @model LibraryLoanPageViewModel
 @{
     ViewData["Title"] = "Quản lý mượn trả sách";
-    ViewData["WideContent"] = true;
     var pagination = Model.Loans.CreatePagination(readerId: Model.FilterReaderId, status: Model.FilterStatus);
 }
 
@@ -43,7 +42,7 @@
 else
 {
     <div class="table-responsive">
-        <table class="table align-middle loan-management-table responsive-data-table">
+        <table class="table align-middle responsive-data-table">
             <thead>
                 <tr><th>Mã phiếu mượn</th><th>Mã thẻ</th><th>Độc giả</th><th>Sách</th><th>Ngày mượn</th><th>Hẹn trả</th><th>Trạng thái</th><th>Phiếu trả</th><th>Thao tác</th></tr>
             </thead>

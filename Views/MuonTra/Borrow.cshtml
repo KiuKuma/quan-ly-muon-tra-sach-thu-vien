@@ -7,7 +7,7 @@
     <div>
         <p class="eyebrow">NGHIỆP VỤ THƯ VIỆN</p>
         <h1>Mượn sách</h1>
-        <p class="text-secondary">Thời hạn tối đa @Model.LoanTermDays ngày, mỗi độc giả giữ tối đa @Model.MaxBooksPerReader bản sách cùng lúc.</p>
+        <p class="text-secondary">Chọn độc giả, kiểm tra số lượng sách còn và lập phiếu mượn.</p>
     </div>
 </div>
 <partial name="_LoanNavigation" />
@@ -49,38 +49,28 @@
             <div id="borrow-book-rows">
                 @for (var i = 0; i < Model.Loan.Items.Count; i++)
                 {
-                    var selectedBook = Model.Books.FirstOrDefault(book => book.Id == Model.Loan.Items[i].BookId);
                     <div class="borrow-book-row" data-book-row>
-                        <div class="book-search-field">
-                            <label class="form-label" data-book-label for="book-search-@i">Tên sách / mã sách</label>
-                            <div class="book-picker" data-book-picker>
-                                <input class="form-control book-search" id="book-search-@i" type="text"
-                                       value="@(selectedBook?.Name ?? (Model.Loan.Items[i].BookId > 0 ? $"SH-{Model.Loan.Items[i].BookId}" : string.Empty))"
-                                       placeholder="Nhập tên sách hoặc mã SH-..." autocomplete="off"
-                                       role="combobox" aria-autocomplete="list" aria-expanded="false" />
-                                <input asp-for="Loan.Items[i].BookId" type="hidden" class="book-select" />
-                                <ul class="book-suggestions" role="listbox" hidden></ul>
-                            </div>
+                        <div>
+                            <label class="form-label" data-book-label for="Loan_Items_@(i)__BookId">Tên sách / mã sách</label>
+                            <select asp-for="Loan.Items[i].BookId" class="form-select book-select" id="Loan_Items_@(i)__BookId">
+                                <option value="0">Chọn sách</option>
+                                @foreach (var book in Model.Books)
+                                {
+                                    <option value="@book.Id" data-title="@book.Name" data-author="@book.Author"
+                                            data-publisher="@book.Publisher" data-available="@book.AvailableCopies">
+                                        SH-@book.Id · @book.Name
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="Loan.Items[i].BookId" class="text-danger"></span>
+                            <div class="book-meta" data-book-meta>Chọn sách để xem thông tin còn lại.</div>
                         </div>
-                        <div class="book-quantity-field">
+                        <div>
                             <label asp-for="Loan.Items[i].Quantity" class="form-label" data-quantity-label>Số lượng mượn</label>
                             <input asp-for="Loan.Items[i].Quantity" class="form-control book-quantity" min="1" max="100" />
-                        </div>
-                        <button class="btn btn-sm btn-outline-danger remove-book-row" type="button" aria-label="Xóa sách này">Xóa</button>
-                        <div class="book-row-feedback">
-                            <span asp-validation-for="Loan.Items[i].BookId" class="text-danger"></span>
                             <span asp-validation-for="Loan.Items[i].Quantity" class="text-danger"></span>
-                            <div class="book-meta" data-book-meta>
-                                @if (selectedBook is not null)
-                                {
-                                    <text>Mã sách: SH-@selectedBook.Id · Tác giả: @selectedBook.Author · Nhà xuất bản: @(selectedBook.Publisher ?? "—") · Còn: @selectedBook.AvailableCopies</text>
-                                }
-                                else
-                                {
-                                    <text>Nhập tên hoặc mã sách rồi chọn một kết quả.</text>
-                                }
-                            </div>
                         </div>
+                        <button class="btn btn-sm btn-outline-danger remove-book-row" type="button" aria-label="Bỏ sách này">Bỏ</button>
                     </div>
                 }
             </div>
@@ -96,27 +86,27 @@
 
 <template id="borrow-book-template">
     <div class="borrow-book-row" data-book-row>
-        <div class="book-search-field">
+        <div>
             <label class="form-label" data-book-label>Tên sách / mã sách</label>
-            <div class="book-picker" data-book-picker>
-                <input class="form-control book-search" type="text" placeholder="Nhập tên sách hoặc mã SH-..."
-                       autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" />
-                <input type="hidden" class="book-select" value="0" />
-                <ul class="book-suggestions" role="listbox" hidden></ul>
-            </div>
+            <select class="form-select book-select" data-book-select>
+                <option value="0">Chọn sách</option>
+                @foreach (var book in Model.Books)
+                {
+                    <option value="@book.Id" data-title="@book.Name" data-author="@book.Author"
+                            data-publisher="@book.Publisher" data-available="@book.AvailableCopies">
+                        SH-@book.Id · @book.Name
+                    </option>
+                }
+            </select>
+            <div class="book-meta" data-book-meta>Chọn sách để xem thông tin còn lại.</div>
         </div>
-        <div class="book-quantity-field">
+        <div>
             <label class="form-label" data-quantity-label>Số lượng mượn</label>
             <input class="form-control book-quantity" type="number" min="1" max="100" value="1" data-book-quantity />
         </div>
-        <button class="btn btn-sm btn-outline-danger remove-book-row" type="button" aria-label="Xóa sách này">Xóa</button>
-        <div class="book-row-feedback">
-            <div class="book-meta" data-book-meta>Nhập tên hoặc mã sách rồi chọn một kết quả.</div>
-        </div>
+        <button class="btn btn-sm btn-outline-danger remove-book-row" type="button" aria-label="Bỏ sách này">Bỏ</button>
     </div>
 </template>
-
-<script type="application/json" id="borrow-book-options">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Books))</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

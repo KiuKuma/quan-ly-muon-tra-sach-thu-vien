@@ -1,3 +1,0 @@
-{"Id":1,"ReturnId":4,"LoanId":7,"ReaderId":2,"Amount":24000,"PaidAt":"2026-11-08T16:16:06.1502997Z","StaffUsername":"admin"}
-{"Id":2,"ReturnId":5,"LoanId":8,"ReaderId":1,"Amount":24000,"PaidAt":"2026-11-08T16:30:27.2964107Z","StaffUsername":"admin"}
-{"Id":3,"ReturnId":6,"LoanId":5,"ReaderId":1,"Amount":40000,"PaidAt":"2026-11-08T16:30:49.3024941Z","StaffUsername":"admin"}

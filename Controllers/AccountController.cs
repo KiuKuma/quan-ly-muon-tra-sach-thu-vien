@@ -46,44 +46,8 @@ public sealed class AccountController(
         ModelState.AddModelError(string.Empty,
             result.Status == LoginStatus.LockedOut
                 ? "Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau 15 phút."
-                : result.Status == LoginStatus.Disabled
-                    ? "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ Quản lý thư viện."
                 : "Tên tài khoản hoặc mật khẩu không chính xác.");
         return View(model);
-    }
-
-    [HttpGet]
-    [AllowAnonymous]
-    public IActionResult Register() => View(new RegisterStaffAccountViewModel());
-
-    [HttpPost]
-    [AllowAnonymous]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterStaffAccountViewModel model)
-    {
-        if (!ModelState.IsValid)
-        {
-            ClearRegistrationPasswords(model);
-            return View(model);
-        }
-
-        var result = await accounts.RegisterStaffAccountAsync(model);
-        if (result == StaffAccountRegistrationResult.DuplicateUsername)
-        {
-            ModelState.AddModelError(nameof(model.Username), "Tên tài khoản này đã được sử dụng.");
-            ClearRegistrationPasswords(model);
-            return View(model);
-        }
-
-        if (result == StaffAccountRegistrationResult.DuplicateEmail)
-        {
-            ModelState.AddModelError(nameof(model.Email), "Email này đã được sử dụng.");
-            ClearRegistrationPasswords(model);
-            return View(model);
-        }
-
-        TempData["Success"] = "Đăng ký thành công. Bạn có thể đăng nhập ngay.";
-        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]
@@ -166,12 +130,6 @@ public sealed class AccountController(
             data.Accounts.FirstOrDefault(item => item.Id == accountId));
         model.Username = account?.Username ?? string.Empty;
         model.Role = account?.Roles.FirstOrDefault() ?? string.Empty;
-    }
-
-    private static void ClearRegistrationPasswords(RegisterStaffAccountViewModel model)
-    {
-        model.Password = string.Empty;
-        model.ConfirmPassword = string.Empty;
     }
 
     private async Task SignInAsync(

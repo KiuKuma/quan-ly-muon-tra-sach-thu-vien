@@ -7,11 +7,12 @@
     <p class="eyebrow">XÁC NHẬN THAO TÁC</p>
     <h1>Xóa tài khoản nhân viên?</h1>
     <p>
-        Bạn đang xóa tài khoản <strong>@Model.Username</strong> (@Model.HoTen).
+        Bạn đang xóa tài khoản <strong>@Model.Username</strong> (@Model.HoTen, @Model.Role).
         Hồ sơ và quyền đăng nhập sẽ bị xóa, không khôi phục được.
     </p>
     <p class="text-secondary">
-        Không thể xóa nhân viên đã lập phiếu mượn hoặc phiếu trả.
+        Không thể xóa nhân viên đã lập phiếu mượn hoặc phiếu trả, tài khoản đang đăng nhập
+        hoặc tài khoản Quản lý cuối cùng.
     </p>
     <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="form-actions">
         <button type="submit" class="btn btn-danger">Xóa nhân viên</button>

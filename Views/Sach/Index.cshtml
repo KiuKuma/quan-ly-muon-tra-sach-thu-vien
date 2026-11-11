@@ -9,40 +9,19 @@
         <h1>Sách</h1>
         <p class="text-secondary">@Model.TotalCount đầu sách</p>
     </div>
-    <div class="d-flex flex-wrap gap-2">
-        @if (User.IsInRole(LibraryRoles.QuanLy) || User.IsInRole(LibraryRoles.NhanVien))
-        {
-            <a class="btn btn-primary" asp-action="Create">Thêm sách</a>
-        }
-        @if (User.IsInRole(LibraryRoles.QuanLy))
-        {
-            <a class="btn btn-outline-secondary" asp-controller="TheLoai" asp-action="Index">Quản lý thể loại</a>
-        }
-    </div>
+    @if (User.IsInRole(LibraryRoles.QuanLy))
+    {
+        <a class="btn btn-primary" asp-action="Create">Thêm sách</a>
+    }
 </div>
 
-<form asp-action="Index" method="get" class="book-search">
-    <div class="book-search-keyword">
-        <label for="search" class="form-label">Từ khóa</label>
-        <input id="search" name="search" value="@ViewBag.Search" class="form-control"
-               placeholder="Tên sách, tác giả, nhà xuất bản..." />
-    </div>
-    <div>
-        <label for="categoryId" class="form-label">Thể loại</label>
-        <select id="categoryId" name="categoryId" asp-items="ViewBag.Categories" class="form-select">
-            <option value="">Tất cả thể loại</option>
-        </select>
-    </div>
-    <label class="book-search-available">
-        <input class="form-check-input" type="checkbox" name="availableOnly" value="true"
-           checked="@((bool?)ViewBag.AvailableOnly == true)" />
-        <span>Chỉ hiện sách còn bản</span>
-    </label>
-    <button type="submit" class="btn btn-primary">Tìm sách</button>
-    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Search) ||
-         (int?)ViewBag.CategoryId is not null || (bool?)ViewBag.AvailableOnly == true)
+<form asp-action="Index" method="get" class="search-row">
+    <label for="search" class="visually-hidden">Tìm theo tên sách hoặc tác giả</label>
+    <input id="search" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm tên sách hoặc tác giả" />
+    <button type="submit" class="btn btn-outline-secondary">Tìm</button>
+    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Search))
     {
-        <a class="btn btn-outline-secondary" asp-action="Index">Xóa lọc</a>
+        <a class="btn btn-link" asp-action="Index">Xóa lọc</a>
     }
 </form>
 
@@ -58,7 +37,6 @@ else
                 <tr>
                     <th>Mã sách</th>
                     <th>Tên sách</th>
-                    <th>Thể loại</th>
                     <th>Tác giả</th>
                     <th>Nhà xuất bản</th>
                     <th>Năm xuất bản</th>
@@ -72,17 +50,16 @@ else
                 <tr>
                     <td data-label="Mã sách">@book.Id</td>
                     <td data-label="Tên sách" class="fw-semibold">@book.TenSach</td>
-                    <td data-label="Thể loại">@(book.TheLoai?.TenTheLoai ?? "Chưa phân loại")</td>
                     <td data-label="Tác giả">@book.TacGia</td>
                     <td data-label="Nhà xuất bản">@(book.NhaXuatBan ?? "—")</td>
                     <td data-label="Năm xuất bản">@(book.NamXuatBan?.ToString() ?? "—")</td>
                     <td data-label="Số lượng" class="text-end">@book.SoLuong</td>
                     <td data-label="Thao tác" class="text-end text-nowrap">
-                        @if (User.IsInRole(LibraryRoles.QuanLy) || User.IsInRole(LibraryRoles.NhanVien))
+                        @if (User.IsInRole(LibraryRoles.QuanLy))
                         {
                             <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@book.Id">Sửa</a>
+                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@book.Id">Xóa</a>
                         }
-                        <a class="btn btn-sm btn-outline-secondary" asp-action="Inventory" asp-route-id="@book.Id">Xóa</a>
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@book.Id">Xem</a>
                     </td>
                 </tr>
@@ -93,7 +70,5 @@ else
 }
 @if (Model.TotalPages > 1)
 {
-    <partial name="_Pagination" model="Model.CreatePagination(
-        (string?)ViewBag.Search, categoryId: (int?)ViewBag.CategoryId,
-        availableOnly: (bool?)ViewBag.AvailableOnly == true ? true : null)" />
+    <partial name="_Pagination" model="Model.CreatePagination((string?)ViewBag.Search)" />
 }

@@ -49,7 +49,6 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
     public async Task<IActionResult> Borrow()
     {
         var model = await store.ReadAsync(BuildBorrowPage);
-        model.Loan.DueAt = DateTime.Today.AddDays(model.LoanTermDays);
         if (model.Books.Count == 0)
         {
             TempData["Error"] = "Hiện không còn sách nào có thể cho mượn.";
@@ -86,24 +85,11 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
                 return (Success: false, Error: "Không tìm thấy độc giả hoặc nhân viên hợp lệ.");
             }
 
-            if (reader.NgaySinh is not DateTime birthDate ||
-                !IsAgeEligible(birthDate, data.Settings, DateTime.Today))
-            {
-                return (Success: false, Error: "Độc giả chưa có ngày sinh hợp lệ theo quy định. Vui lòng cập nhật hồ sơ trước khi cho mượn.");
-            }
-
-            var cardExpiry = reader.NgayHetHan?.Date ??
-                reader.NgayDangKy.AddMonths(data.Settings.ReaderCardValidityMonths).Date;
-            if (cardExpiry < DateTime.UtcNow.Date)
-            {
-                return (Success: false, Error: "Thẻ độc giả đã hết hạn. Vui lòng gia hạn trước khi lập phiếu mượn.");
-            }
-
-            var overdueBooks = GetReaderOverdueBookDebt(data, reader.Id, DateTime.UtcNow.Date);
-            if (overdueBooks > 0)
+            var outstandingBookCount = GetReaderOutstandingBookDebt(data, reader.Id);
+            if (outstandingBookCount > 0)
             {
                 return (Success: false,
-                    Error: $"Độc giả còn {overdueBooks} cuốn quá hạn chưa trả. Vui lòng xử lý trước khi lập phiếu mượn mới.");
+                    Error: $"Độc giả còn nợ {outstandingBookCount} cuốn sách chưa trả. Vui lòng nhận lại sách trước khi lập phiếu mượn mới.");
             }
 
             var outstandingFine = GetReaderFineDebt(data, reader.Id);
@@ -116,23 +102,14 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
             var borrowedDate = model.Loan.BorrowedAt.Date;
             var dueDate = model.Loan.DueAt.Date;
             if (borrowedDate == DateTime.MinValue || dueDate == DateTime.MinValue ||
-                borrowedDate > DateTime.Today || dueDate < borrowedDate || dueDate < DateTime.Today ||
-                dueDate > borrowedDate.AddDays(data.Settings.LoanTermDays))
+                borrowedDate > DateTime.Today || dueDate < borrowedDate || dueDate < DateTime.Today)
             {
-                return (Success: false,
-                    Error: $"Ngày mượn không được ở tương lai; hạn trả phải từ ngày mượn và không vượt quá {data.Settings.LoanTermDays} ngày.");
+                return (Success: false, Error: "Ngày mượn không được ở tương lai; hạn trả phải từ ngày mượn và không ở quá khứ.");
             }
 
             var quantities = model.Loan.Items
                 .GroupBy(item => item.BookId)
                 .ToDictionary(group => group.Key, group => group.Sum(item => item.Quantity));
-            var outstandingBookCount = GetReaderOutstandingBookDebt(data, reader.Id);
-            var requestedBookCount = quantities.Values.Sum();
-            if (outstandingBookCount + requestedBookCount > data.Settings.MaxBooksPerReader)
-            {
-                return (Success: false,
-                    Error: $"Mỗi độc giả chỉ được giữ tối đa {data.Settings.MaxBooksPerReader} bản sách cùng lúc; hiện còn {outstandingBookCount} bản chưa trả.");
-            }
             foreach (var (bookId, quantity) in quantities)
             {
                 var book = data.Sach.FirstOrDefault(item => item.Id == bookId);
@@ -162,7 +139,6 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
                 TenTaiKhoanNhanVien = staffAccount.Username,
                 NgayMuon = DateTime.SpecifyKind(borrowedDate, DateTimeKind.Utc),
                 HanTra = DateTime.SpecifyKind(dueDate, DateTimeKind.Utc),
-                MucPhatMoiNgay = data.Settings.DailyLateFine,
                 TrangThai = "DangMuon"
             });
 
@@ -278,12 +254,9 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
                 var alreadyReturned = priorReturns.GetValueOrDefault(detail.Id);
                 if (item.Quantity > detail.SoLuong - alreadyReturned ||
                     !data.Sach.Any(book => book.Id == detail.SachId) ||
-                    item.Condition is not ("Tot" or "HuHong" or "Mat") ||
-                    (item.Condition != "Tot" && string.IsNullOrWhiteSpace(item.Note)))
+                    item.Condition is not ("Tot" or "HuHong"))
                 {
-                    return (Success: false,
-                        Error: "Số lượng trả vượt số còn mượn; tình trạng sách không hợp lệ hoặc thiếu ghi chú hư hỏng/mất.",
-                        FineAmount: 0m);
+                    return (Success: false, Error: "Số lượng trả vượt số còn mượn hoặc tình trạng sách không hợp lệ.", FineAmount: 0m);
                 }
             }
 
@@ -304,13 +277,7 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
             foreach (var item in returnItems)
             {
                 var detail = details[item.LoanDetailId];
-                var conditionFine = item.Condition switch
-                {
-                    "HuHong" => data.Settings.DamagedBookFine,
-                    "Mat" => data.Settings.LostBookFine,
-                    _ => 0m
-                };
-                var fine = (lateDays * loan.MucPhatMoiNgay + conditionFine) * item.Quantity;
+                var fine = CalculateProgressiveFine(lateDays, item.Quantity);
                 fineTotal += fine;
                 data.ChiTietPhieuTra.Add(new ChiTietPhieuTra
                 {
@@ -364,7 +331,7 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> PayFine(int id, int returnId, decimal amount)
+    public async Task<IActionResult> PayFine(int id, int returnId)
     {
         var accountId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var result = await store.UpdateAsync(data =>
@@ -382,31 +349,16 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
             var fineTotal = data.ChiTietPhieuTra
                 .Where(item => item.PhieuTraId == receipt.Id)
                 .Sum(item => Math.Max(item.TienPhat, 0m));
-            var paid = GetReceiptPaidAmount(data, receipt);
-            var outstanding = Math.Max(fineTotal - paid, 0m);
+            var outstanding = Math.Max(fineTotal - receipt.TienPhatDaThanhToan, 0m);
             if (outstanding <= 0)
             {
                 return (Success: false, Error: "Phiếu trả này không còn nợ tiền phạt.", Amount: 0m);
             }
 
-            if (amount <= 0m || amount > outstanding)
-            {
-                return (Success: false, Error: $"Số tiền thu phải lớn hơn 0 và không vượt quá {outstanding:N0} ₫.", Amount: 0m);
-            }
-
-            receipt.TienPhatDaThanhToan = paid + amount;
+            receipt.TienPhatDaThanhToan = fineTotal;
             receipt.NgayThanhToanTienPhat = DateTime.UtcNow;
             receipt.TenTaiKhoanThuTienPhat = staffAccount.Username;
-            data.FinePayments.Add(new FinePayment
-            {
-                Id = data.FinePayments.Select(item => item.Id).DefaultIfEmpty(0).Max() + 1,
-                ReturnId = receipt.Id,
-                LoanId = loan.Id,
-                ReaderId = loan.DocGiaId,
-                Amount = amount,
-                StaffUsername = staffAccount.Username
-            });
-            return (Success: true, Error: string.Empty, Amount: amount);
+            return (Success: true, Error: string.Empty, Amount: outstanding);
         });
 
         if (!result.Success)
@@ -421,40 +373,11 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
-    [HttpGet]
-    public async Task<IActionResult> FineReceipt(int paymentId)
-    {
-        var receipt = await store.ReadAsync(data =>
-        {
-            var payment = data.FinePayments.FirstOrDefault(item => item.Id == paymentId);
-            if (payment is null)
-            {
-                return null;
-            }
-
-            return new FinePaymentReceiptViewModel
-            {
-                Id = payment.Id,
-                ReturnId = payment.ReturnId,
-                LoanId = payment.LoanId,
-                ReaderId = payment.ReaderId,
-                ReaderName = data.DocGia.FirstOrDefault(item => item.Id == payment.ReaderId)?.HoTen
-                    ?? $"Độc giả #{payment.ReaderId}",
-                Amount = payment.Amount,
-                PaidAt = payment.PaidAt,
-                StaffUsername = payment.StaffUsername
-            };
-        });
-        return receipt is null ? NotFound() : View(receipt);
-    }
-
     private async Task PopulateBorrowPageAsync(BorrowPageViewModel model)
     {
         var options = await store.ReadAsync(BuildBorrowPage);
         model.Readers = options.Readers;
         model.Books = options.Books;
-        model.LoanTermDays = options.LoanTermDays;
-        model.MaxBooksPerReader = options.MaxBooksPerReader;
     }
 
     private async Task PopulateReturnPageAsync(ReturnPageViewModel model)
@@ -477,8 +400,6 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
 
     private static BorrowPageViewModel BuildBorrowPage(LibraryData data) => new()
     {
-        LoanTermDays = data.Settings.LoanTermDays,
-        MaxBooksPerReader = data.Settings.MaxBooksPerReader,
         Readers = data.DocGia.OrderBy(item => item.Id).Select(item => new ReaderOptionViewModel
         {
             Id = item.Id,
@@ -551,8 +472,6 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
         var employee = data.NhanVien.FirstOrDefault(item => item.Id == loan.NhanVienId);
         var staffUsername = loan.TenTaiKhoanNhanVien ??
             data.Accounts.FirstOrDefault(account => account.Id == employee?.IdentityUserId)?.Username ?? "Không rõ";
-        var readerFineBreakdown = GetReaderFineDebtBreakdown(data, loan.DocGiaId);
-        var pendingLoanFines = readerFineBreakdown.PendingLoanFines;
         var receipts = data.PhieuTra.Where(item => item.PhieuMuonId == loan.Id)
             .OrderBy(item => item.NgayTra).ToList();
         var receiptIds = receipts.Select(item => item.Id).ToHashSet();
@@ -569,10 +488,7 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
             Status = status.Label,
             StatusCode = status.Code,
             OutstandingLoanFine = GetLoanOutstandingFine(data, loan, DateTime.UtcNow.Date),
-            ReaderOutstandingFine = readerFineBreakdown.ConfirmedFineDebt +
-                pendingLoanFines.Sum(item => item.Amount),
-            ReaderConfirmedFineDebt = readerFineBreakdown.ConfirmedFineDebt,
-            ReaderPendingLoanFines = pendingLoanFines,
+            ReaderOutstandingFine = GetReaderFineDebt(data, loan.DocGiaId),
             Books = details.Select(detail =>
             {
                 var returned = returnedByLoan.GetValueOrDefault(detail.Id);
@@ -588,7 +504,7 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
             {
                 var receiptDetails = returnDetails.Where(item => item.PhieuTraId == receipt.Id).ToList();
                 var fine = receiptDetails.Sum(item => Math.Max(item.TienPhat, 0m));
-                var paid = Math.Min(GetReceiptPaidAmount(data, receipt), fine);
+                var paid = Math.Min(Math.Max(receipt.TienPhatDaThanhToan, 0m), fine);
                 return new LoanReturnDetailsViewModel
                 {
                     Id = receipt.Id,
@@ -598,15 +514,6 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
                     FineOutstanding = fine - paid,
                     FinePaidAt = receipt.NgayThanhToanTienPhat,
                     FinePaidBy = receipt.TenTaiKhoanThuTienPhat,
-                    Payments = data.FinePayments.Where(item => item.ReturnId == receipt.Id)
-                        .OrderBy(item => item.PaidAt)
-                        .Select(item => new LoanFinePaymentViewModel
-                        {
-                            Id = item.Id,
-                            Amount = item.Amount,
-                            PaidAt = item.PaidAt,
-                            StaffUsername = item.StaffUsername
-                        }).ToList(),
                     Books = receiptDetails.Select(returnDetail =>
                     {
                         var loanDetail = details.FirstOrDefault(item =>
@@ -630,13 +537,6 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
 
     private static decimal GetReaderFineDebt(LibraryData data, int readerId)
     {
-        var breakdown = GetReaderFineDebtBreakdown(data, readerId);
-        return breakdown.ConfirmedFineDebt + breakdown.PendingLoanFines.Sum(item => item.Amount);
-    }
-
-    private static (decimal ConfirmedFineDebt, List<ReaderPendingFineViewModel> PendingLoanFines)
-        GetReaderFineDebtBreakdown(LibraryData data, int readerId)
-    {
         var today = DateTime.UtcNow.Date;
         var readerLoanIds = data.PhieuMuon
             .Where(item => item.DocGiaId == readerId)
@@ -649,18 +549,12 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
                 var fineTotal = data.ChiTietPhieuTra
                     .Where(item => item.PhieuTraId == receipt.Id)
                     .Sum(item => Math.Max(item.TienPhat, 0m));
-                return Math.Max(fineTotal - GetReceiptPaidAmount(data, receipt), 0m);
+                return Math.Max(fineTotal - Math.Max(receipt.TienPhatDaThanhToan, 0m), 0m);
             });
-        var pendingLoanFines = data.PhieuMuon
+        var accruedLoanFine = data.PhieuMuon
             .Where(loan => loan.DocGiaId == readerId)
-            .Select(loan => new ReaderPendingFineViewModel
-            {
-                LoanId = loan.Id,
-                Amount = GetLoanOutstandingFine(data, loan, today)
-            })
-            .Where(item => item.Amount > 0m)
-            .ToList();
-        return (receiptDebt, pendingLoanFines);
+            .Sum(loan => GetLoanOutstandingFine(data, loan, today));
+        return receiptDebt + accruedLoanFine;
     }
 
     private static int GetReaderOutstandingBookDebt(LibraryData data, int readerId)
@@ -677,33 +571,6 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
             });
     }
 
-    private static int GetReaderOverdueBookDebt(LibraryData data, int readerId, DateTime today)
-    {
-        var returnedByLoan = BuildReturnedQuantitiesByLoan(data);
-        return data.PhieuMuon
-            .Where(loan => loan.DocGiaId == readerId && loan.HanTra.Date < today)
-            .Sum(loan =>
-            {
-                var returned = returnedByLoan.GetValueOrDefault(loan.Id) ?? [];
-                return data.ChiTietPhieuMuon
-                    .Where(detail => detail.PhieuMuonId == loan.Id)
-                    .Sum(detail => Math.Max(detail.SoLuong - returned.GetValueOrDefault(detail.Id), 0));
-            });
-    }
-
-    private static bool IsAgeEligible(DateTime birthDate, LibrarySettings settings, DateTime today)
-    {
-        var age = today.Year - birthDate.Date.Year;
-        if (birthDate.Date > today.AddYears(-age))
-        {
-            age--;
-        }
-
-        return birthDate.Date <= today &&
-               age >= settings.ReaderMinimumAge &&
-               age <= settings.ReaderMaximumAge;
-    }
-
     private static decimal GetLoanOutstandingFine(LibraryData data, PhieuMuon loan, DateTime today)
     {
         var lateDays = Math.Max((today - loan.HanTra.Date).Days, 0);
@@ -718,16 +585,21 @@ public sealed class MuonTraController(LibraryFileStore store) : Controller
             .Sum(detail =>
             {
                 var outstandingQuantity = Math.Max(detail.SoLuong - returnedByDetail.GetValueOrDefault(detail.Id), 0);
-                return lateDays * loan.MucPhatMoiNgay * outstandingQuantity;
+                return CalculateProgressiveFine(lateDays, outstandingQuantity);
             });
     }
 
-    private static decimal GetReceiptPaidAmount(LibraryData data, PhieuTra receipt)
+    private static decimal CalculateProgressiveFine(int lateDays, int quantity)
     {
-        var recordedPayments = data.FinePayments
-            .Where(item => item.ReturnId == receipt.Id)
-            .Sum(item => Math.Max(item.Amount, 0m));
-        return Math.Max(recordedPayments, Math.Max(receipt.TienPhatDaThanhToan, 0m));
+        if (lateDays <= 0 || quantity <= 0)
+        {
+            return 0m;
+        }
+
+        var firstTierDays = Math.Min(lateDays, 7);
+        var secondTierDays = Math.Min(Math.Max(lateDays - 7, 0), 23);
+        var thirdTierDays = Math.Max(lateDays - 30, 0);
+        return quantity * (firstTierDays * 1_000m + secondTierDays * 2_000m + thirdTierDays * 5_000m);
     }
 
     private static List<ReturnableLoanViewModel> BuildReturnableLoans(LibraryData data)

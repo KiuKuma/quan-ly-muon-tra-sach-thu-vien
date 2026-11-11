@@ -40,7 +40,7 @@
             <input asp-for="Return.LoanId" type="hidden" />
             <input type="hidden" name="FilterReaderId" value="@Model.FilterReaderId" />
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-            <p class="text-secondary">Nhập số lượng thực tế nhận lại. Sách hư hỏng/mất được ghi nhận kèm tiền phạt và không cộng vào số lượng sẵn có.</p>
+            <p class="text-secondary">Nhập số lượng thực tế nhận lại. Sách hư hỏng được ghi nhận trên phiếu nhưng không cộng vào số lượng sẵn có.</p>
             <div class="return-book-list">
                 @for (var i = 0; i < selectedLoan.Books.Count; i++)
                 {
@@ -61,15 +61,14 @@
                         <div>
                             <label class="form-label" for="Return_Items_@(i)__Condition">Tình trạng</label>
                             <select id="Return_Items_@(i)__Condition" name="Return.Items[@i].Condition" class="form-select">
-                                <option value="Tot" selected="@(submittedItem is null || submittedItem.Condition == "Tot")">Tốt</option>
+                                <option value="Tot" selected="@(submittedItem?.Condition != "HuHong")">Tốt</option>
                                 <option value="HuHong" selected="@(submittedItem?.Condition == "HuHong")">Hư hỏng</option>
-                                <option value="Mat" selected="@(submittedItem?.Condition == "Mat")">Báo mất</option>
                             </select>
                         </div>
                         <div>
                             <label class="form-label" for="Return_Items_@(i)__Note">Ghi chú tình trạng</label>
                             <input id="Return_Items_@(i)__Note" name="Return.Items[@i].Note" value="@submittedItem?.Note"
-                                   class="form-control" maxlength="300" placeholder="Bắt buộc nếu hư hỏng/mất" />
+                                   class="form-control" maxlength="300" placeholder="Không bắt buộc" />
                         </div>
                     </div>
                 }

@@ -2,7 +2,3 @@
 {"Id":2,"PhieuTraId":2,"ChiTietPhieuMuonId":3,"SoLuongTra":1,"TienPhat":0,"TinhTrang":"Tot","GhiChu":"Ngày trả giả định theo ngày hẹn trả"}
 {"Id":3,"PhieuTraId":3,"ChiTietPhieuMuonId":6,"SoLuongTra":1,"TienPhat":0,"TinhTrang":"Tot","GhiChu":null}
 {"Id":4,"PhieuTraId":3,"ChiTietPhieuMuonId":8,"SoLuongTra":2,"TienPhat":0,"TinhTrang":"Tot","GhiChu":null}
-{"Id":5,"PhieuTraId":4,"ChiTietPhieuMuonId":9,"SoLuongTra":2,"TienPhat":24000,"TinhTrang":"Tot","GhiChu":null}
-{"Id":6,"PhieuTraId":5,"ChiTietPhieuMuonId":10,"SoLuongTra":2,"TienPhat":24000,"TinhTrang":"Tot","GhiChu":null}
-{"Id":7,"PhieuTraId":6,"ChiTietPhieuMuonId":5,"SoLuongTra":1,"TienPhat":20000,"TinhTrang":"Tot","GhiChu":null}
-{"Id":8,"PhieuTraId":6,"ChiTietPhieuMuonId":7,"SoLuongTra":1,"TienPhat":20000,"TinhTrang":"Tot","GhiChu":null}
