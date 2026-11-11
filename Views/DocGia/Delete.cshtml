@@ -6,7 +6,7 @@
 <section class="form-panel">
     <p class="eyebrow">XÁC NHẬN THAO TÁC</p>
     <h1>Xóa hồ sơ độc giả?</h1>
-    <p>Bạn đang xóa hồ sơ <strong>@Model.HoTen</strong>. Độc giả đã có phiếu mượn sẽ không thể xóa.</p>
+    <p>Bạn có chắc muốn xóa hồ sơ độc giả <strong>@Model.HoTen</strong> không? Thao tác này không thể hoàn tác. Độc giả đã có lịch sử mượn không thể xóa để bảo toàn dữ liệu.</p>
     <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="form-actions">
         <button type="submit" class="btn btn-danger">Xóa độc giả</button>
         <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>

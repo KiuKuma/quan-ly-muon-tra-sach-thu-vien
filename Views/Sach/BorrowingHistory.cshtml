@@ -1,0 +1,80 @@
+@model BookBorrowingHistoryViewModel
+@{
+    ViewData["Title"] = "Lịch sử mượn theo sách";
+    ViewData["WideContent"] = true;
+    var pagination = Model.Results.CreatePagination(
+        search: Model.Search,
+        action: "BorrowingHistory");
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">KHO SÁCH</p>
+        <h1>Lịch sử mượn theo sách</h1>
+        <p class="text-secondary">Tìm theo tên sách hoặc mã SH để xem các độc giả đã mượn.</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">Quay lại danh sách sách</a>
+</div>
+
+<form asp-action="BorrowingHistory" method="get" class="search-row form-panel">
+    <div class="flex-grow-1">
+        <label for="search" class="form-label">Tên sách hoặc mã sách</label>
+        <input id="search" name="search" value="@Model.Search" class="form-control"
+               placeholder="Ví dụ: Domain-Driven Design hoặc SH-12" />
+    </div>
+    <button type="submit" class="btn btn-primary">Tìm lịch sử</button>
+    @if (!string.IsNullOrWhiteSpace(Model.Search))
+    {
+        <a class="btn btn-outline-secondary" asp-action="BorrowingHistory">Xóa lọc</a>
+    }
+</form>
+
+@if (string.IsNullOrWhiteSpace(Model.Search))
+{
+    <div class="empty-state"><p>Nhập tên hoặc mã sách để xem những ai đã mượn sách đó.</p></div>
+}
+else if (Model.Results.TotalCount == 0)
+{
+    <div class="empty-state"><p>Không tìm thấy lịch sử mượn phù hợp.</p></div>
+}
+else
+{
+    <p class="text-secondary">@Model.Results.TotalCount lượt mượn phù hợp.</p>
+    <div class="table-responsive">
+        <table class="table align-middle responsive-data-table">
+            <thead>
+                <tr>
+                    <th>Mã sách</th>
+                    <th>Tên sách</th>
+                    <th>Mã độc giả</th>
+                    <th>Độc giả</th>
+                    <th>Số lượng</th>
+                    <th>Ngày mượn</th>
+                    <th>Hạn trả</th>
+                    <th>Trạng thái</th>
+                    <th>Phiếu mượn</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in Model.Results.Items)
+                {
+                    <tr>
+                        <td data-label="Mã sách">SH-@entry.BookId</td>
+                        <td data-label="Tên sách" class="fw-semibold">@entry.BookTitle</td>
+                        <td data-label="Mã độc giả">DG-@entry.ReaderId</td>
+                        <td data-label="Độc giả">@entry.ReaderName</td>
+                        <td data-label="Số lượng">@entry.Quantity</td>
+                        <td data-label="Ngày mượn">@entry.BorrowedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td data-label="Hạn trả">@entry.DueAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td data-label="Trạng thái"><span class="loan-status loan-status-@entry.StatusCode">@entry.Status</span></td>
+                        <td data-label="Phiếu mượn"><a asp-controller="MuonTra" asp-action="Details" asp-route-id="@entry.LoanId">PM-@entry.LoanId</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Results.TotalPages > 1)
+    {
+        <partial name="_Pagination" model="pagination" />
+    }
+}

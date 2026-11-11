@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using System.Security.Cryptography;
 using quan_ly_muon_tra_sach_thu_vien.Models;
 using quan_ly_muon_tra_sach_thu_vien.Models.ViewModels;
 
@@ -36,7 +37,8 @@ public sealed class LibraryAccountService(
             // tài khoản Quản lý nếu hệ thống không còn Quản lý nào. Nhờ vậy tài khoản đã bị xóa không
             // tự quay lại và tài khoản tạo thêm không bị mất mỗi lần khởi động.
             var firstRun = data.Accounts.Count == 0;
-            var hasManager = data.Accounts.Any(account => account.Roles.Contains(LibraryRoles.QuanLy));
+            var hasManager = data.Accounts.Any(account =>
+                account.IsActive && account.Roles.Contains(LibraryRoles.QuanLy));
             var seeds = DefaultAccounts
                 .Where(seed => firstRun || (!hasManager && seed.Role == LibraryRoles.QuanLy))
                 .ToArray();
@@ -65,6 +67,10 @@ public sealed class LibraryAccountService(
 
                 account.Username = seed.Username;
                 account.Roles = [seed.Role];
+                if (!hasManager && seed.Role == LibraryRoles.QuanLy)
+                {
+                    account.IsActive = true;
+                }
                 if (string.IsNullOrEmpty(account.PasswordHash))
                 {
                     account.PasswordHash = seed.PasswordHash;
@@ -127,6 +133,57 @@ public sealed class LibraryAccountService(
         });
     }
 
+    public Task<StaffAccountRegistrationResult> RegisterStaffAccountAsync(RegisterStaffAccountViewModel model)
+    {
+        return store.UpdateAsync(data =>
+        {
+            var username = model.Username.Trim();
+            var email = model.Email.Trim();
+            if (data.Accounts.Any(account =>
+                    account.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
+            {
+                return StaffAccountRegistrationResult.DuplicateUsername;
+            }
+
+            if (data.Profiles.Any(profile =>
+                    profile.Email.Equals(email, StringComparison.OrdinalIgnoreCase)) ||
+                data.DocGia.Any(reader =>
+                    reader.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            {
+                return StaffAccountRegistrationResult.DuplicateEmail;
+            }
+
+            var account = new LibraryAccount
+            {
+                Username = username,
+                Roles = [LibraryRoles.NhanVien]
+            };
+            account.PasswordHash = passwordHasher.HashPassword(account, model.Password);
+
+            var profile = new LibraryUserProfile
+            {
+                AccountId = account.Id,
+                HoTen = model.HoTen.Trim(),
+                Email = email,
+                SoDienThoai = model.SoDienThoai?.Trim(),
+                DiaChi = model.DiaChi.Trim()
+            };
+            var staff = new NhanVien
+            {
+                Id = data.NhanVien.Select(item => item.Id).DefaultIfEmpty(0).Max() + 1,
+                HoTen = profile.HoTen,
+                Email = profile.Email,
+                SoDienThoai = profile.SoDienThoai,
+                IdentityUserId = account.Id
+            };
+
+            data.Accounts.Add(account);
+            data.Profiles.Add(profile);
+            data.NhanVien.Add(staff);
+            return StaffAccountRegistrationResult.Success;
+        });
+    }
+
     public Task<AccountDeleteResult> DeleteAccountAsync(string accountId, string? currentAccountId)
     {
         return store.UpdateAsync(data =>
@@ -143,12 +200,13 @@ public sealed class LibraryAccountService(
             }
 
             if (account.Roles.Contains(LibraryRoles.QuanLy) &&
-                !data.Accounts.Any(item => item.Id != accountId && item.Roles.Contains(LibraryRoles.QuanLy)))
+                account.IsActive && !data.Accounts.Any(item => item.Id != accountId && item.IsActive &&
+                    item.Roles.Contains(LibraryRoles.QuanLy)))
             {
                 return AccountDeleteResult.LastManager;
             }
 
-                       var staff = data.NhanVien.FirstOrDefault(item => item.IdentityUserId == accountId);
+            var staff = data.NhanVien.FirstOrDefault(item => item.IdentityUserId == accountId);
             if (staff is not null && data.PhieuMuon.Any(loan => loan.NhanVienId == staff.Id))
             {
                 return AccountDeleteResult.HasLoanHistory;
@@ -161,14 +219,61 @@ public sealed class LibraryAccountService(
 
             data.Profiles.RemoveAll(item => item.AccountId == accountId);
             data.Accounts.Remove(account);
-
-            // Giữ lại hồ sơ độc giả (có thể còn lịch sử mượn), chỉ gỡ liên kết với tài khoản đã xóa.
             foreach (var reader in data.DocGia.Where(item => item.IdentityUserId == accountId))
             {
                 reader.IdentityUserId = null;
             }
 
             return AccountDeleteResult.Success;
+        });
+    }
+
+    public Task<AccountStatusChangeResult> SetAccountActiveAsync(
+        string accountId,
+        string? currentAccountId,
+        bool isActive)
+    {
+        return store.UpdateAsync(data =>
+        {
+            var account = data.Accounts.FirstOrDefault(item => item.Id == accountId);
+            if (account is null)
+            {
+                return AccountStatusChangeResult.NotFound;
+            }
+
+            if (!isActive && accountId == currentAccountId)
+            {
+                return AccountStatusChangeResult.CannotDisableSelf;
+            }
+
+            if (!isActive && account.Roles.Contains(LibraryRoles.QuanLy) &&
+                !data.Accounts.Any(item => item.Id != accountId && item.IsActive &&
+                    item.Roles.Contains(LibraryRoles.QuanLy)))
+            {
+                return AccountStatusChangeResult.LastActiveManager;
+            }
+
+            account.IsActive = isActive;
+            return AccountStatusChangeResult.Success;
+        });
+    }
+
+    public Task<AccountPasswordResetResult> ResetPasswordAsync(string accountId)
+    {
+        return store.UpdateAsync(data =>
+        {
+            var account = data.Accounts.FirstOrDefault(item => item.Id == accountId);
+            if (account is null)
+            {
+                return new AccountPasswordResetResult(AccountPasswordResetStatus.NotFound, null);
+            }
+
+            var temporaryPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(18))
+                .TrimEnd('=').Replace('+', '-').Replace('/', '_');
+            account.PasswordHash = passwordHasher.HashPassword(account, temporaryPassword);
+            account.FailedLoginAttempts = 0;
+            account.LockoutEndUtc = null;
+            return new AccountPasswordResetResult(AccountPasswordResetStatus.Success, temporaryPassword);
         });
     }
 
@@ -181,6 +286,11 @@ public sealed class LibraryAccountService(
             if (account is null)
             {
                 return new LoginResult(LoginStatus.InvalidCredentials, null);
+            }
+
+            if (!account.IsActive)
+            {
+                return new LoginResult(LoginStatus.Disabled, null);
             }
 
             if (account.LockoutEndUtc is DateTimeOffset lockoutEnd && lockoutEnd > DateTimeOffset.UtcNow)
@@ -293,13 +403,21 @@ public enum LoginStatus
 {
     Success,
     InvalidCredentials,
-    LockedOut
+    LockedOut,
+    Disabled
 }
 
 public enum ProfileUpdateResult
 {
     Success,
     NotFound,
+    DuplicateEmail
+}
+
+public enum StaffAccountRegistrationResult
+{
+    Success,
+    DuplicateUsername,
     DuplicateEmail
 }
 
@@ -311,5 +429,23 @@ public enum AccountDeleteResult
     LastManager,
     HasLoanHistory
 }
+
+public enum AccountStatusChangeResult
+{
+    Success,
+    NotFound,
+    CannotDisableSelf,
+    LastActiveManager
+}
+
+public enum AccountPasswordResetStatus
+{
+    Success,
+    NotFound
+}
+
+public sealed record AccountPasswordResetResult(
+    AccountPasswordResetStatus Status,
+    string? TemporaryPassword);
 
 public sealed record LoginResult(LoginStatus Status, LibraryAccount? Account);

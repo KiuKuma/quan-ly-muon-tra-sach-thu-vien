@@ -32,7 +32,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                 return (Account: account, Profile: profile);
             });
 
-        if (accountData.Account is null || accountData.Profile is null)
+        if (accountData.Account is null || accountData.Profile is null || !accountData.Account.IsActive)
         {
             context.RejectPrincipal();
             await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
